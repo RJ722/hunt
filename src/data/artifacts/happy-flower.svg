@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Happy flower">
+  <g>
+    <!-- gentle sway around the base -->
+    <animateTransform attributeName="transform" type="rotate" values="-3 100 180; 3 100 180; -3 100 180" dur="4s" repeatCount="indefinite"/>
+    <!-- stem -->
+    <path d="M100 180 Q96 140 100 118" fill="none" stroke="#7fb185" stroke-width="8" stroke-linecap="round"/>
+    <!-- leaves -->
+    <path d="M100 150 q-26 -12 -34 8 q22 12 34 -8" fill="#9ccf9f"/>
+    <path d="M100 138 q26 -12 34 8 q-22 12 -34 -8" fill="#7fb185"/>
+    <!-- petals -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0 100 92; 8 100 92; 0 100 92" dur="5s" repeatCount="indefinite"/>
+      <g fill="#ffb0c0">
+        <ellipse cx="100" cy="58" rx="16" ry="24"/>
+        <ellipse cx="100" cy="126" rx="16" ry="24"/>
+        <ellipse cx="66" cy="92" rx="24" ry="16"/>
+        <ellipse cx="134" cy="92" rx="24" ry="16"/>
+        <ellipse cx="76" cy="68" rx="18" ry="22" transform="rotate(-45 76 68)"/>
+        <ellipse cx="124" cy="68" rx="18" ry="22" transform="rotate(45 124 68)"/>
+        <ellipse cx="76" cy="116" rx="18" ry="22" transform="rotate(45 76 116)"/>
+        <ellipse cx="124" cy="116" rx="18" ry="22" transform="rotate(-45 124 116)"/>
+      </g>
+    </g>
+    <!-- face center -->
+    <circle cx="100" cy="92" r="26" fill="#f3b53f"/>
+    <circle cx="91" cy="88" r="4.5" fill="#5f4a39">
+      <animate attributeName="ry" values="4.5;1;4.5" dur="4.8s" keyTimes="0;0.04;0.08;1" repeatCount="indefinite" begin="1s"/>
+    </circle>
+    <circle cx="109" cy="88" r="4.5" fill="#5f4a39">
+      <animate attributeName="ry" values="4.5;1;4.5" dur="4.8s" keyTimes="0;0.04;0.08;1" repeatCount="indefinite" begin="1s"/>
+    </circle>
+    <circle cx="82" cy="96" r="5" fill="#f08a9a" opacity="0.7"/>
+    <circle cx="118" cy="96" r="5" fill="#f08a9a" opacity="0.7"/>
+    <path d="M92 99 q8 8 16 0" fill="none" stroke="#5f4a39" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

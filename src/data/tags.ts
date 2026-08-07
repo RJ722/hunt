@@ -22,7 +22,8 @@ export const tags: TagEntry[] = [
   {
     slug: 'vault',
     isFinal: true,
-    completionMessage: 'ACCESS GRANTED. You cracked every cipher, Agent.',
+    completionMessage:
+      'Every treat sniffed out, every riddle solved. Happy birthday, Kat — you clever, curious thing. 🎂🐾',
   },
 ]
 

@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react'
 import { useRoute } from './lib/router'
 import { RiddleScreen } from './screens/RiddleScreen'
 import { NotFoundScreen } from './screens/NotFoundScreen'
-import { theme } from './animation-kit/theme'
+import { fonts, theme } from './animation-kit/theme'
 
 // Dev-only harness: lazy so it forms its own chunk and never ships to prod.
 const Playground = lazy(() =>
@@ -18,8 +18,9 @@ export default function App() {
     <div
       style={{
         minHeight: '100dvh',
-        background: `radial-gradient(circle at 50% 0%, ${theme.panel}, ${theme.bg} 70%)`,
+        background: `radial-gradient(circle at 50% -10%, ${theme.panel}, ${theme.bg} 65%)`,
         color: theme.text,
+        fontFamily: fonts.body,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

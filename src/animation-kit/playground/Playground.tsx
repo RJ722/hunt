@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { WordleGuessGame } from '../WordleGuessGame'
 import { TagRiddleAnimation } from '../TagRiddleAnimation'
 import { CompletionAnimation } from '../CompletionAnimation'
-import { theme } from '../theme'
+import { fonts, theme } from '../theme'
 import {
   mockAnswer,
   mockArtifact,
@@ -61,9 +61,9 @@ export function Playground() {
           <WordleGuessGame
             answerLength={mockAnswer.length}
             answer={mockAnswer}
-            hint="A station that receives a signal and passes it along"
+            hint="A little race where friends pass a baton paw to paw"
             artifactSrc={mockArtifact}
-            artifactAlt="Relay bot"
+            artifactAlt="Curious Kat"
             maxAttempts={6}
             evaluateGuess={mockEvaluate(mockAnswer)}
             onResolved={(solved) =>
@@ -77,7 +77,7 @@ export function Playground() {
             answer={mockSpacedAnswer}
             hint="Two words — spaces are fixed, you only guess the letters"
             artifactSrc={mockArtifact}
-            artifactAlt="Relay bot"
+            artifactAlt="Curious Kat"
             maxAttempts={6}
             evaluateGuess={mockEvaluate(mockSpacedAnswer)}
             onResolved={(solved) =>
@@ -86,7 +86,7 @@ export function Playground() {
           />
         )}
         {scene === 'clue' && (
-          <TagRiddleAnimation riddleTitle="Transmission 01" riddleText={mockClue} />
+          <TagRiddleAnimation riddleTitle="Treat One" riddleText={mockClue} />
         )}
         {scene === 'completion' && <CompletionAnimation message={mockCompletion} />}
       </div>
@@ -97,12 +97,13 @@ export function Playground() {
 function tabStyle(active: boolean): React.CSSProperties {
   return {
     padding: '8px 16px',
-    borderRadius: 8,
-    border: `1px solid ${active ? theme.cyan : theme.panelEdge}`,
-    background: active ? `${theme.cyan}18` : 'transparent',
-    color: active ? theme.cyan : theme.textDim,
-    fontFamily: 'ui-monospace, monospace',
+    borderRadius: 999,
+    border: `1px solid ${active ? theme.peach : theme.panelEdge}`,
+    background: active ? theme.peachSoft : 'transparent',
+    color: active ? theme.text : theme.textDim,
+    fontFamily: fonts.display,
     fontSize: 13,
+    fontWeight: 600,
     cursor: 'pointer',
   }
 }

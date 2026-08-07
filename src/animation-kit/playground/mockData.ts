@@ -1,5 +1,5 @@
 import type { LetterStatus } from '../contract'
-import relayBot from '../../data/artifacts/relay-bot.svg?url'
+import curiousKat from '../../data/artifacts/curious-kat.svg?url'
 
 export const mockAnswer = 'RELAY'
 
@@ -7,7 +7,7 @@ export const mockAnswer = 'RELAY'
 export const mockSpacedAnswer = 'IN BLOOM'
 
 /** Artifact image URL used by the playground wordle scene. */
-export const mockArtifact = relayBot
+export const mockArtifact = curiousKat
 
 /** A trivial local scorer so the playground needs no app dependencies. */
 export function mockEvaluate(answer: string) {
@@ -32,6 +32,7 @@ export function mockEvaluate(answer: string) {
 }
 
 export const mockClue =
-  'Signal locked. Head to the quietest room in the building — where knowledge is stacked floor to ceiling.'
+  "The first treat is found! Kat's whiskers twitch toward the quietest, coziest room in the house — where hundreds of stories nap on their shelves."
 
-export const mockCompletion = 'ACCESS GRANTED. You cracked every cipher, Agent.'
+export const mockCompletion =
+  'Every treat sniffed out, every riddle solved. Happy birthday, Kat — you clever, curious thing. 🎂🐾'

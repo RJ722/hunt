@@ -1,8 +1,8 @@
 ---
 tagId: garden
-title: Transmission 03
+title: Treat Three
 answer: IN BLOOM
-hint: Two words — what a flower is doing when it opens
-artifact: bloom-flower.svg
+hint: Two words — what a flower is doing when it opens wide
+artifact: happy-flower.svg
 ---
-Almost there, Agent. The final terminal is sealed in the most secure spot you know — behind the heavy door where valuables are kept. Tap the last tag to breach it.
+So close, birthday Kat! The very last treat is tucked inside your safest, coziest hideaway — behind the heavy door where the most precious things are kept warm. Give the final tag a gentle boop with your nose!

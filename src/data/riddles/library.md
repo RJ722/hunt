@@ -1,8 +1,8 @@
 ---
 tagId: library
-title: Transmission 02
+title: Treat Two
 answer: PAGE
-hint: One sheet of a book — also someone who runs errands
-artifact: page-sprite.svg
+hint: One leaf of a storybook — also a young helper in a castle
+artifact: book-friend.svg
 ---
-Decrypted. Now step outside to where things grow in rows and the air smells green. Your next node waits beneath the tallest planter.
+Purr-fect! Now Kat trots outside to where the air smells green and sweet and petals nod hello in the breeze. Sniff around the base of the tallest planter — the next treat is hiding in the leaves.

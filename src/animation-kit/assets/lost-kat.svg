@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Puzzled kat">
+  <g>
+    <animateTransform attributeName="transform" type="rotate" values="-2 100 100; 2 100 100; -2 100 100" dur="3.6s" repeatCount="indefinite"/>
+    <!-- question mark bubble -->
+    <g>
+      <animateTransform attributeName="transform" type="translate" values="0 0; 0 -4; 0 0" dur="2s" repeatCount="indefinite"/>
+      <circle cx="150" cy="46" r="18" fill="#e4dbf7"/>
+      <text x="150" y="54" font-family="'Baloo 2', sans-serif" font-size="26" font-weight="700" fill="#b0a1e3" text-anchor="middle">?</text>
+    </g>
+    <!-- body -->
+    <ellipse cx="100" cy="150" rx="48" ry="36" fill="#ffb59a"/>
+    <!-- head tilted -->
+    <circle cx="100" cy="98" r="44" fill="#ffc4ac"/>
+    <!-- ears -->
+    <path d="M66 68 L60 38 L92 60 Z" fill="#ffb59a"/>
+    <path d="M134 68 L140 38 L108 60 Z" fill="#ffb59a"/>
+    <path d="M70 64 L68 48 L84 60 Z" fill="#f6c6ce"/>
+    <path d="M130 64 L132 48 L116 60 Z" fill="#f6c6ce"/>
+    <!-- cheeks -->
+    <circle cx="72" cy="108" r="8" fill="#f6a9b4" opacity="0.7"/>
+    <circle cx="128" cy="108" r="8" fill="#f6a9b4" opacity="0.7"/>
+    <!-- eyes (looking up, curious) -->
+    <circle cx="84" cy="94" r="7" fill="#5f4a39"/>
+    <circle cx="116" cy="94" r="7" fill="#5f4a39"/>
+    <circle cx="86" cy="91" r="2.2" fill="#fff"/>
+    <circle cx="118" cy="91" r="2.2" fill="#fff"/>
+    <!-- nose + small wobbly mouth -->
+    <path d="M96 104 L104 104 L100 109 Z" fill="#e07a86"/>
+    <path d="M90 116 q5 -4 10 0 q5 4 10 0" fill="none" stroke="#5f4a39" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- whiskers -->
+    <g stroke="#c9a892" stroke-width="2" stroke-linecap="round">
+      <path d="M58 102 L38 98 M58 110 L38 112 M142 102 L162 98 M142 110 L162 112"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Kat waving">
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -4; 0 0" dur="3.2s" repeatCount="indefinite"/>
+    <!-- tail -->
+    <path d="M148 152 q34 4 30 -30 q-3 -20 -22 -16" fill="none" stroke="#ff9f7e" stroke-width="12" stroke-linecap="round">
+      <animateTransform attributeName="transform" type="rotate" values="0 148 152; 7 148 152; 0 148 152" dur="2.4s" repeatCount="indefinite"/>
+    </path>
+    <!-- body -->
+    <ellipse cx="100" cy="146" rx="50" ry="40" fill="#ffb59a"/>
+    <!-- waving paw -->
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="-8 60 120; 12 60 120; -8 60 120" dur="1.4s" repeatCount="indefinite"/>
+      <circle cx="52" cy="112" r="12" fill="#ffc4ac"/>
+    </g>
+    <!-- head -->
+    <circle cx="100" cy="92" r="46" fill="#ffc4ac"/>
+    <!-- ears -->
+    <path d="M66 60 L60 28 L94 52 Z" fill="#ffb59a"/>
+    <path d="M134 60 L140 28 L106 52 Z" fill="#ffb59a"/>
+    <path d="M70 56 L68 38 L86 52 Z" fill="#f6c6ce"/>
+    <path d="M130 56 L132 38 L114 52 Z" fill="#f6c6ce"/>
+    <!-- cheeks -->
+    <circle cx="72" cy="102" r="9" fill="#f6a9b4" opacity="0.7"/>
+    <circle cx="128" cy="102" r="9" fill="#f6a9b4" opacity="0.7"/>
+    <!-- eyes -->
+    <circle cx="83" cy="90" r="7" fill="#5f4a39">
+      <animate attributeName="ry" values="7;1;7" dur="4.4s" keyTimes="0;0.04;0.08;1" repeatCount="indefinite" begin="1s"/>
+    </circle>
+    <circle cx="117" cy="90" r="7" fill="#5f4a39">
+      <animate attributeName="ry" values="7;1;7" dur="4.4s" keyTimes="0;0.04;0.08;1" repeatCount="indefinite" begin="1s"/>
+    </circle>
+    <circle cx="85" cy="88" r="2" fill="#fff"/>
+    <circle cx="119" cy="88" r="2" fill="#fff"/>
+    <!-- nose + smile -->
+    <path d="M96 101 L104 101 L100 106 Z" fill="#e07a86"/>
+    <path d="M100 106 q-7 8 -15 4 M100 106 q7 8 15 4" fill="none" stroke="#5f4a39" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- whiskers -->
+    <g stroke="#c9a892" stroke-width="2" stroke-linecap="round">
+      <path d="M58 98 L38 94 M58 106 L38 108 M142 98 L162 94 M142 106 L162 108"/>
+    </g>
+  </g>
+</svg>

@@ -28,16 +28,16 @@ describe('App smoke render', () => {
   it('renders the home fallback on a bare URL', () => {
     setHash('')
     render(<App />)
-    expect(screen.getByText(/Tap an NFC tag to begin/i)).toBeTruthy()
+    expect(screen.getByText(/Kat's Birthday Hunt/i)).toBeTruthy()
   })
 
   it('renders the Wordle gate for a known tag', () => {
     setHash('#/t/start')
     render(<App />)
-    expect(screen.getByText(/ACCESS PANEL/i)).toBeTruthy()
+    expect(screen.getByText(/Paw Print Puzzle/i)).toBeTruthy()
     // 5 letter wheels for RELAY.
     expect(screen.getAllByRole('spinbutton')).toHaveLength(5)
-    // Artifact image is rendered.
+    // Artifact character is rendered.
     expect(screen.getByRole('img')).toBeTruthy()
   })
 
@@ -51,13 +51,13 @@ describe('App smoke render', () => {
   it('renders the completion screen for the final tag', () => {
     setHash('#/t/vault')
     render(<App />)
-    expect(screen.getByText(/HUNT COMPLETE/i)).toBeTruthy()
+    expect(screen.getByText(/Kat found it/i)).toBeTruthy()
     expect(screen.getByText(/Made with .* by RJ722/i)).toBeTruthy()
   })
 
   it('renders the not-found screen for an unknown tag', () => {
     setHash('#/t/does-not-exist')
     render(<App />)
-    expect(screen.getByText(/SIGNAL LOST/i)).toBeTruthy()
+    expect(screen.getByText(/no treats here/i)).toBeTruthy()
   })
 })

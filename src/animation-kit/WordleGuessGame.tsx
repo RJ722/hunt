@@ -2,17 +2,22 @@ import { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import type { LetterStatus, WordleGuessGameProps } from './contract'
 import { LetterWheel } from './LetterWheel'
-import { theme, usePrefersReducedMotion } from './theme'
+import { ScallopedCard } from './ScallopedCard'
+import { fonts, theme, usePrefersReducedMotion } from './theme'
 
 interface SubmittedRow {
   letters: string[]
   statuses: LetterStatus[]
 }
 
-function statusColor(s: LetterStatus): string {
-  if (s === 'correct') return theme.green
-  if (s === 'present') return theme.amber
-  return theme.textDim
+function tileBg(s: LetterStatus): string {
+  if (s === 'correct') return theme.sage
+  if (s === 'present') return theme.gold
+  return theme.panelEdge
+}
+
+function tileText(s: LetterStatus): string {
+  return s === 'absent' ? theme.textDim : theme.cream
 }
 
 function isAllCorrect(statuses: LetterStatus[]): boolean {
@@ -20,9 +25,9 @@ function isAllCorrect(statuses: LetterStatus[]): boolean {
 }
 
 /**
- * Wordle-style access panel. Spin the letter wheels, submit a guess, and the
- * component scores it. After `maxAttempts` failed guesses it reveals `answer`.
- * Calls `onResolved(solved)` once cleared.
+ * "Paw Print Puzzle" — a scalloped scrapbook page. Spin the petal reels to
+ * guess Kat's word; each guess is scored and softly coloured. After
+ * `maxAttempts` tries the answer is revealed. Calls `onResolved(solved)`.
  */
 export function WordleGuessGame({
   answerLength,
@@ -46,14 +51,14 @@ export function WordleGuessGame({
   const [shakeKey, setShakeKey] = useState(0)
   const resolvedRef = useRef(false)
 
-  const attemptsLeft = maxAttempts - submitted.length
+  const attemptsUsed = submitted.length
   const locked = phase !== 'playing'
 
   const finish = (solved: boolean) => {
     if (resolvedRef.current) return
     resolvedRef.current = true
     setPhase(solved ? 'solved' : 'revealed')
-    window.setTimeout(() => onResolved(solved), reduced ? 300 : 1300)
+    window.setTimeout(() => onResolved(solved), reduced ? 300 : 1400)
   }
 
   const submit = () => {
@@ -67,11 +72,9 @@ export function WordleGuessGame({
     if (isAllCorrect(statuses)) {
       finish(true)
     } else if (nextSubmitted.length >= maxAttempts) {
-      // Reveal the answer on the wheels, then resolve as unsolved.
       setGuess(answer.toUpperCase().split(''))
       finish(false)
     } else {
-      // Wrong but attempts remain — glitch/shake feedback.
       setShakeKey((k) => k + 1)
     }
   }
@@ -85,173 +88,192 @@ export function WordleGuessGame({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
-      {artifactSrc && (
-        <motion.img
-          src={artifactSrc}
-          alt={artifactAlt ?? ''}
-          width={120}
-          height={120}
-          draggable={false}
-          initial={{ opacity: 0, scale: reduced ? 1 : 0.85 }}
-          animate={
-            reduced
-              ? { opacity: 1 }
-              : { opacity: 1, scale: 1, y: [0, -8, 0] }
-          }
-          transition={
-            reduced
-              ? { duration: 0.3 }
-              : { y: { duration: 3.4, repeat: Infinity, ease: 'easeInOut' }, opacity: { duration: 0.4 }, scale: { duration: 0.4 } }
-          }
-          style={{
-            width: 120,
-            height: 120,
-            objectFit: 'contain',
-            filter: `drop-shadow(0 0 16px ${theme.cyan}66)`,
-            userSelect: 'none',
-          }}
-        />
-      )}
-      <div style={{ textAlign: 'center' }}>
+    <ScallopedCard maxWidth={460}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+        {/* Hero: shrunk character, tiny caption, then the hint as the main text. */}
+        {artifactSrc && (
+          <motion.img
+            src={artifactSrc}
+            alt={artifactAlt ?? ''}
+            width={78}
+            height={78}
+            draggable={false}
+            initial={{ opacity: 0, scale: reduced ? 1 : 0.85 }}
+            animate={reduced ? { opacity: 1 } : { opacity: 1, scale: 1, y: [0, -6, 0] }}
+            transition={
+              reduced
+                ? { duration: 0.3 }
+                : { y: { duration: 3.4, repeat: Infinity, ease: 'easeInOut' }, opacity: { duration: 0.4 }, scale: { duration: 0.4 } }
+            }
+            style={{ width: 78, height: 78, objectFit: 'contain' }}
+          />
+        )}
+
         <div
           style={{
-            fontFamily: 'ui-monospace, monospace',
-            letterSpacing: 4,
-            color: theme.cyan,
-            textShadow: `0 0 10px ${theme.cyan}`,
-            fontSize: 14,
+            fontFamily: fonts.display,
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: 3,
+            textTransform: 'uppercase',
+            color: theme.sage,
           }}
         >
-          ACCESS PANEL
+          Paw Print Puzzle
         </div>
+
         {hint && (
-          <div style={{ marginTop: 8, color: theme.textDim, fontSize: 14, maxWidth: 320 }}>
-            {hint}
-          </div>
-        )}
-      </div>
-
-      {/* Submitted guesses as colour-coded tiles. */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {submitted.map((row, r) => {
-          const isLastWrong =
-            r === submitted.length - 1 && phase === 'playing'
-          return (
-            <motion.div
-              key={r}
-              // Glitch/shake only the most recent wrong row.
-              animate={
-                isLastWrong && !reduced
-                  ? { x: [0, -6, 6, -4, 4, 0], opacity: [1, 0.6, 1, 0.7, 1] }
-                  : {}
-              }
-              // Re-trigger via key change on each wrong submit.
-              transition={{ duration: 0.4 }}
-              {...(isLastWrong ? { 'data-shake': shakeKey } : {})}
-              style={{ display: 'flex', gap: 8, justifyContent: 'center' }}
-            >
-              {row.letters.map((letter, c) =>
-                isSpace(c) ? (
-                  <div key={c} style={{ width: 20 }} aria-hidden="true" />
-                ) : (
-                  <div
-                    key={c}
-                    style={{
-                      width: 44,
-                      height: 44,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontFamily: 'ui-monospace, monospace',
-                      fontSize: 22,
-                      fontWeight: 700,
-                      color: theme.bg,
-                      background: statusColor(row.statuses[c]),
-                      borderRadius: 8,
-                      boxShadow: `0 0 12px ${statusColor(row.statuses[c])}99`,
-                    }}
-                  >
-                    {letter}
-                  </div>
-                ),
-              )}
-            </motion.div>
-          )
-        })}
-      </div>
-
-      {/* Active input row: the letter wheels. Hidden once resolved. */}
-      {phase === 'playing' && (
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', alignItems: 'center' }}>
-          {guess.map((letter, i) =>
-            isSpace(i) ? (
-              <div
-                key={i}
-                aria-hidden="true"
-                style={{ width: 24 }}
-              />
-            ) : (
-              <LetterWheel
-                key={i}
-                value={letter}
-                onChange={(l) => setLetter(i, l)}
-                accent={theme.cyan}
-              />
-            ),
-          )}
-        </div>
-      )}
-
-      {phase === 'playing' && (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <button type="button" onClick={submit} style={submitStyle}>
-            TRANSMIT ▸
-          </button>
-          <div style={{ color: theme.textDim, fontSize: 13, fontFamily: 'ui-monospace, monospace' }}>
-            {attemptsLeft} attempt{attemptsLeft === 1 ? '' : 's'} left
-          </div>
-        </div>
-      )}
-
-      <AnimatePresence>
-        {phase === 'revealed' && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{ color: theme.amber, fontSize: 14, fontFamily: 'ui-monospace, monospace' }}
-          >
-            The code was <strong style={{ letterSpacing: 3 }}>{answer.toUpperCase()}</strong> — routing you onward…
-          </motion.div>
-        )}
-        {phase === 'solved' && (
-          <motion.div
-            initial={{ opacity: 0, scale: reduced ? 1 : 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
+          <p
             style={{
-              color: theme.green,
-              fontSize: 16,
-              fontFamily: 'ui-monospace, monospace',
-              textShadow: `0 0 14px ${theme.green}`,
+              margin: 0,
+              fontFamily: fonts.body,
+              fontSize: 19,
+              fontWeight: 600,
+              lineHeight: 1.5,
+              color: theme.text,
+              textAlign: 'center',
+              maxWidth: 320,
             }}
           >
-            ✔ ACCESS GRANTED
-          </motion.div>
+            {hint}
+          </p>
         )}
-      </AnimatePresence>
-    </div>
+
+        {/* Submitted guesses as soft rounded tiles. */}
+        {submitted.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            {submitted.map((row, r) => {
+              const isLastWrong = r === submitted.length - 1 && phase === 'playing'
+              return (
+                <motion.div
+                  key={r}
+                  animate={
+                    isLastWrong && !reduced
+                      ? { x: [0, -6, 6, -4, 4, 0] }
+                      : {}
+                  }
+                  transition={{ duration: 0.4 }}
+                  {...(isLastWrong ? { 'data-shake': shakeKey } : {})}
+                  style={{ display: 'flex', gap: 6, justifyContent: 'center' }}
+                >
+                  {row.letters.map((letter, c) =>
+                    isSpace(c) ? (
+                      <div key={c} style={{ width: 16 }} aria-hidden="true" />
+                    ) : (
+                      <div
+                        key={c}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontFamily: fonts.display,
+                          fontSize: 20,
+                          fontWeight: 700,
+                          color: tileText(row.statuses[c]),
+                          background: tileBg(row.statuses[c]),
+                          borderRadius: 12,
+                          boxShadow: `0 2px 5px ${theme.panelEdge}88`,
+                        }}
+                      >
+                        {letter}
+                      </div>
+                    ),
+                  )}
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Active input row: the petal reels. */}
+        {phase === 'playing' && (
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
+            {guess.map((letter, i) =>
+              isSpace(i) ? (
+                <div key={i} aria-hidden="true" style={{ width: 22 }} />
+              ) : (
+                <LetterWheel
+                  key={i}
+                  value={letter}
+                  onChange={(l) => setLetter(i, l)}
+                  accent={theme.peach}
+                />
+              ),
+            )}
+          </div>
+        )}
+
+        {/* Footer: one compact group — button with attempt pips beneath it. */}
+        {phase === 'playing' && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <button type="button" onClick={submit} style={submitStyle}>
+              Sniff it out 🐾
+            </button>
+            <div style={{ display: 'flex', gap: 7 }} aria-label={`${maxAttempts - attemptsUsed} tries left`}>
+              {Array.from({ length: maxAttempts }, (_, i) => {
+                const spent = i < attemptsUsed
+                return (
+                  <span
+                    key={i}
+                    style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: '50%',
+                      background: spent ? 'transparent' : theme.peach,
+                      border: `1.5px solid ${spent ? theme.panelEdge : theme.peach}`,
+                      transition: 'background 0.2s ease',
+                    }}
+                  />
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        <AnimatePresence>
+          {phase === 'revealed' && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ color: theme.gold, fontFamily: fonts.display, fontSize: 16, fontWeight: 700 }}
+            >
+              The word was{' '}
+              <strong style={{ letterSpacing: 2 }}>{answer.toUpperCase()}</strong> — come along! 🌸
+            </motion.div>
+          )}
+          {phase === 'solved' && (
+            <motion.div
+              initial={{ opacity: 0, scale: reduced ? 1 : 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 18 }}
+              style={{
+                color: theme.sage,
+                fontFamily: fonts.display,
+                fontSize: 20,
+                fontWeight: 800,
+              }}
+            >
+              Found it! 🐾
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </ScallopedCard>
   )
 }
 
 const submitStyle: React.CSSProperties = {
-  padding: '12px 28px',
-  borderRadius: 10,
-  border: `1px solid ${theme.cyan}`,
-  background: 'transparent',
-  color: theme.cyan,
-  fontFamily: 'ui-monospace, monospace',
-  fontSize: 15,
-  letterSpacing: 2,
+  padding: '12px 30px',
+  borderRadius: 999,
+  border: 'none',
+  background: theme.peach,
+  color: theme.cream,
+  fontFamily: fonts.display,
+  fontSize: 16,
+  fontWeight: 700,
+  letterSpacing: 0.5,
   cursor: 'pointer',
-  boxShadow: `0 0 16px ${theme.cyan}55, inset 0 0 12px ${theme.cyan}22`,
+  boxShadow: `0 4px 0 ${theme.blush}, 0 6px 12px ${theme.peach}55`,
 }

@@ -285,3 +285,54 @@ boundary described above.
 - `src/data/riddles/*.md` — added `artifact:`; `garden` answer -> `IN BLOOM`.
 - `src/data/artifacts/*.svg` — placeholder character art.
 - `src/animation-kit/playground/mockData.ts` — artifact URL + spaced-answer demo.
+
+## Storybook Redesign (theme overhaul)
+
+The neon/cyberpunk skin was fully replaced with a **cozy whimsical storybook**
+theme: *Kat the cat exploring a garden of hidden birthday treats*. The
+functional/design contract (`animation-kit/contract.ts`) is unchanged, so this
+was a pure reskin plus a few UX refinements.
+
+### Look & feel
+- **Palette** (`theme.ts`): warm cream/blush surfaces (no dark bg) with soft
+  peach, sage, and lavender accents + warm-brown ink. Token names
+  `bg/panel/panelEdge/text/textDim` kept stable; accent names are semantic
+  (`peach/sage/lavender/gold/cream/blush/...`).
+- **Fonts**: Baloo 2 (display) + Quicksand (body) via Google Fonts CDN
+  (`index.html`); exposed as `fonts.display` / `fonts.body`.
+- **Panel motif**: `ScallopedCard.tsx` — a cream scrapbook page with scalloped
+  top/bottom edges (SVG `<pattern>` bumps under one unifying `drop-shadow`), a
+  dashed "stitch" border, and a washi-tape accent. Wraps the puzzle.
+- **Sprites**: cute animated SVG placeholders. Riddle characters live in
+  `src/data/artifacts/` (`curious-kat`, `book-friend`, `happy-flower`);
+  design-owned sprites live in `src/animation-kit/assets/` (`party-kat`,
+  `home-kat`, `lost-kat`). Swap in final art against these filenames.
+
+### Component changes
+- **LetterWheel**: petal-shaped reel with a **paw-print badge** haloing the
+  centered letter. Strong **center pop** (large/bold/glowing selected letter vs.
+  dimmed, smaller neighbours) driven reactively by `useMotionValueEvent` so it
+  pops during scroll too. **▲/▼ buttons removed** — drag/flick is the sole touch
+  interaction. **Desktop**: mouse-wheel/trackpad steps one letter per notch via
+  a non-passive `wheel` listener (`preventDefault` stops page scroll). Circular
+  wrap + velocity momentum retained.
+- **WordleGuessGame** ("Paw Print Puzzle"): wrapped in `ScallopedCard`. Header
+  reduced to a single hero — shrunk character (78px), tiny tracked
+  "PAW PRINT PUZZLE" caption, hint is the largest text. Footer merges the
+  button (**"Sniff it out 🐾"**) with **attempt pips** (● dots) instead of a
+  separate counter line. Tiles softened to sage/gold/tan.
+- **TagRiddleAnimation**: clue reveal is now **petals blooming open** from a bud
+  + ribbon accent, text blossoming in word-by-word.
+- **CompletionAnimation**: **confetti burst + rain, rising balloons, sparkles,
+  glow ring, and a party-hat Kat** popping in with "Kat found it! 🎉".
+- **NotFoundScreen**: cozy home/unknown states with waving/puzzled Kat sprites.
+- All copy rewritten to storybook tone (riddles, `tags.ts` completion message,
+  button/labels/messages). Riddle answers unchanged (RELAY / PAGE / IN BLOOM).
+
+### Accessibility
+Every new animation honors `prefers-reduced-motion` (petals/confetti/balloons
+degrade to static; text appears instantly).
+
+### Verification
+`oxlint` clean · `tsc -b && vite build` succeeds (Playground still code-split) ·
+`vitest` 18/18 (App smoke-test copy assertions updated to the new strings).

@@ -95,6 +95,29 @@ Do this once per tag with a phone NFC-writing app (e.g. **NFC Tools**):
    `slug` from `tags.ts` (e.g. `.../#/t/library`).
 4. Hold the tag to the phone to write it. Repeat for each tag.
 
+### Tag URL reference
+
+Every tag's URL is `<site-base>#/t/<slug>`. Replace `<user>` with your GitHub
+username (and the repo name if it isn't `nfcunt`). These slugs are the single
+source of truth in [`src/data/tags.ts`](src/data/tags.ts) — keep this table in
+sync if you add, rename, or remove tags.
+
+| Order | Slug | Riddle / role | Answer | Production URL to burn |
+| ----- | ---- | ------------- | ------ | ---------------------- |
+| 1 | `start` | Treat One | `RELAY` | `https://<user>.github.io/nfcunt/#/t/start` |
+| 2 | `library` | Treat Two | `PAGE` | `https://<user>.github.io/nfcunt/#/t/library` |
+| 3 | `garden` | Treat Three | `IN BLOOM` | `https://<user>.github.io/nfcunt/#/t/garden` |
+| 🎉 | `vault` | Final — celebration (no puzzle) | — | `https://<user>.github.io/nfcunt/#/t/vault` |
+
+For local testing before you burn tags, swap the base for the dev server, e.g.
+`http://localhost:5173/nfcunt/#/t/start` (the dev server may pick another port
+such as `5174` if `5173` is busy — check the terminal output).
+
+> **Tip:** The hunt order is defined by the *clues*, not the tags themselves —
+> each riddle's text points the player to the next physical tag. `start` is the
+> intended entry point; `vault` is the final celebration. Place the physical
+> tags accordingly.
+
 > ### ⚠️ Finalize your URL before writing tags
 > The full URL is physically burned into each tag. If you later rename the repo,
 > add a custom domain, or move hosts, **every tag must be re-written.** Decide

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Curious kat">
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -4; 0 0" dur="3.4s" repeatCount="indefinite"/>
+    <!-- tail -->
+    <path d="M150 150 q34 6 30 -30 q-3 -22 -22 -18" fill="none" stroke="#ff9f7e" stroke-width="12" stroke-linecap="round">
+      <animateTransform attributeName="transform" type="rotate" values="0 150 150; 6 150 150; 0 150 150" dur="2.6s" repeatCount="indefinite"/>
+    </path>
+    <!-- body -->
+    <ellipse cx="100" cy="140" rx="52" ry="40" fill="#ffb59a"/>
+    <!-- head -->
+    <circle cx="100" cy="86" r="48" fill="#ffc4ac"/>
+    <!-- ears -->
+    <path d="M64 54 L58 20 L92 44 Z" fill="#ffb59a"/>
+    <path d="M136 54 L142 20 L108 44 Z" fill="#ffb59a"/>
+    <path d="M68 50 L66 32 L84 46 Z" fill="#f6c6ce"/>
+    <path d="M132 50 L134 32 L116 46 Z" fill="#f6c6ce"/>
+    <!-- cheeks -->
+    <circle cx="72" cy="96" r="9" fill="#f6a9b4" opacity="0.7"/>
+    <circle cx="128" cy="96" r="9" fill="#f6a9b4" opacity="0.7"/>
+    <!-- eyes -->
+    <circle cx="82" cy="84" r="7" fill="#5f4a39">
+      <animate attributeName="ry" values="7;1;7" dur="4.5s" keyTimes="0;0.04;0.08;1" repeatCount="indefinite" begin="1.2s"/>
+    </circle>
+    <circle cx="118" cy="84" r="7" fill="#5f4a39">
+      <animate attributeName="ry" values="7;1;7" dur="4.5s" keyTimes="0;0.04;0.08;1" repeatCount="indefinite" begin="1.2s"/>
+    </circle>
+    <circle cx="84" cy="82" r="2" fill="#fff"/>
+    <circle cx="120" cy="82" r="2" fill="#fff"/>
+    <!-- nose + mouth -->
+    <path d="M96 96 L104 96 L100 101 Z" fill="#e07a86"/>
+    <path d="M100 101 q-7 8 -15 4 M100 101 q7 8 15 4" fill="none" stroke="#5f4a39" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- whiskers -->
+    <g stroke="#c9a892" stroke-width="2" stroke-linecap="round">
+      <path d="M60 92 L38 88 M60 100 L38 102 M140 92 L162 88 M140 100 L162 102"/>
+    </g>
+  </g>
+</svg>

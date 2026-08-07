@@ -1,8 +1,8 @@
 ---
 tagId: start
-title: Transmission 01
+title: Treat One
 answer: RELAY
-hint: A station that receives a signal and passes it along
-artifact: relay-bot.svg
+hint: A little race where friends pass a baton paw to paw
+artifact: curious-kat.svg
 ---
-Signal locked. Head to the quietest room in the building — where knowledge is stacked floor to ceiling. Find the tag tucked behind the third shelf.
+The first treat is found! Kat's whiskers twitch toward the quietest, coziest room in the house — where hundreds of stories nap on their shelves. Pad softly and peek behind the third shelf for your next little paw print.

@@ -1,95 +1,130 @@
-import { useEffect, useRef, useState } from 'react'
 import { motion } from 'motion/react'
 import type { TagRiddleAnimationProps } from './contract'
-import { theme, usePrefersReducedMotion } from './theme'
+import { fonts, theme, usePrefersReducedMotion } from './theme'
 
-const GLYPHS = '!<>-_\\/[]{}—=+*^?#0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
-function randomGlyph(): string {
-  return GLYPHS[Math.floor(Math.random() * GLYPHS.length)]
-}
+const PETALS = [
+  { c: theme.blush, a: 0 },
+  { c: theme.peachSoft, a: 45 },
+  { c: theme.lavenderSoft, a: 90 },
+  { c: theme.blush, a: 135 },
+  { c: theme.peachSoft, a: 180 },
+  { c: theme.lavenderSoft, a: 225 },
+  { c: theme.blush, a: 270 },
+  { c: theme.peachSoft, a: 315 },
+]
 
 /**
- * Clue-reveal animation: the text arrives like a decoding transmission —
- * scrambled glyphs resolving left-to-right into readable neon text.
+ * Clue reveal: a little flower blooms open — petals unfurl outward from a
+ * folded bud, a ribbon accent settles, and the clue text blossoms in word by
+ * word. Reduced motion shows everything at rest immediately.
  */
 export function TagRiddleAnimation({ riddleTitle, riddleText }: TagRiddleAnimationProps) {
   const reduced = usePrefersReducedMotion()
-  const [revealed, setRevealed] = useState(reduced ? riddleText.length : 0)
-  const [, forceTick] = useState(0)
-  const frame = useRef(0)
-
-  useEffect(() => {
-    if (reduced) {
-      setRevealed(riddleText.length)
-      return
-    }
-    setRevealed(0)
-    let raf = 0
-    const start = performance.now()
-    const perChar = 34 // ms of scramble before each character locks in
-
-    const loop = (now: number) => {
-      const locked = Math.min(riddleText.length, Math.floor((now - start) / perChar))
-      setRevealed(locked)
-      frame.current += 1
-      forceTick(frame.current) // keep scrambling the unresolved tail
-      if (locked < riddleText.length) {
-        raf = requestAnimationFrame(loop)
-      }
-    }
-    raf = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(raf)
-  }, [riddleText, reduced])
-
-  const rendered = riddleText
-    .split('')
-    .map((ch, i) => {
-      if (i < revealed || ch === ' ' || ch === '\n') return ch
-      return randomGlyph()
-    })
-    .join('')
+  const words = riddleText.split(/\s+/)
 
   return (
     <div
       style={{
-        maxWidth: 560,
+        maxWidth: 520,
         margin: '0 auto',
         textAlign: 'center',
         padding: '8px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 18,
       }}
     >
-      <motion.div
-        initial={{ opacity: 0, y: reduced ? 0 : -8 }}
-        animate={{ opacity: 1, y: 0 }}
+      {/* Blooming flower */}
+      <div style={{ position: 'relative', width: 120, height: 120 }}>
+        <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+          <g transform="translate(60 60)">
+            {PETALS.map((p, i) => (
+              <motion.ellipse
+                key={i}
+                rx="15"
+                ry="26"
+                fill={p.c}
+                initial={
+                  reduced
+                    ? false
+                    : { scale: 0.1, rotate: p.a, y: 0, opacity: 0 }
+                }
+                animate={{ scale: 1, rotate: p.a, y: -24, opacity: 1 }}
+                transition={{
+                  delay: reduced ? 0 : 0.08 * i,
+                  type: 'spring',
+                  stiffness: 220,
+                  damping: 14,
+                }}
+                style={{ originX: '50%', originY: '100%' }}
+              />
+            ))}
+            <motion.circle
+              r="18"
+              fill={theme.gold}
+              initial={reduced ? false : { scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: reduced ? 0 : 0.7, type: 'spring', stiffness: 260, damping: 16 }}
+            />
+            <motion.text
+              y="6"
+              textAnchor="middle"
+              fontSize="20"
+              initial={reduced ? false : { opacity: 0, scale: 0.4 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: reduced ? 0 : 0.85, duration: 0.4 }}
+            >
+              🐾
+            </motion.text>
+          </g>
+        </svg>
+        {/* ribbon accent */}
+        <motion.div
+          initial={reduced ? false : { opacity: 0, y: -6, rotate: -12 }}
+          animate={{ opacity: 1, y: 0, rotate: -12 }}
+          transition={{ delay: reduced ? 0 : 0.95, type: 'spring', stiffness: 240, damping: 15 }}
+          style={{ position: 'absolute', top: -6, right: 6, fontSize: 22 }}
+        >
+          🎀
+        </motion.div>
+      </div>
+
+      <div
         style={{
-          fontFamily: 'ui-monospace, monospace',
-          fontSize: 13,
-          letterSpacing: 4,
-          color: theme.magenta,
-          textShadow: `0 0 10px ${theme.magenta}`,
-          marginBottom: 18,
+          fontFamily: fonts.display,
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: 3,
+          textTransform: 'uppercase',
+          color: theme.lavender,
         }}
       >
-        ▸ {riddleTitle ? riddleTitle.toUpperCase() : 'INCOMING TRANSMISSION'}
-      </motion.div>
+        {riddleTitle ?? 'A note from Kat'}
+      </div>
 
       <p
         aria-label={riddleText}
         style={{
-          fontFamily: 'ui-monospace, monospace',
-          fontSize: 19,
-          lineHeight: 1.7,
-          color: theme.cyan,
-          textShadow: `0 0 12px ${theme.cyan}66`,
-          whiteSpace: 'pre-wrap',
-          minHeight: 60,
+          margin: 0,
+          fontFamily: fonts.body,
+          fontSize: 20,
+          fontWeight: 600,
+          lineHeight: 1.65,
+          color: theme.text,
         }}
       >
-        {rendered}
-        {revealed < riddleText.length && (
-          <span style={{ color: theme.magenta }}>█</span>
-        )}
+        {words.map((w, i) => (
+          <motion.span
+            key={i}
+            initial={reduced ? false : { opacity: 0, y: 8, filter: 'blur(4px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ delay: reduced ? 0 : 1.1 + i * 0.05, duration: 0.4 }}
+            style={{ display: 'inline-block', marginRight: '0.32em' }}
+          >
+            {w}
+          </motion.span>
+        ))}
       </p>
     </div>
   )
