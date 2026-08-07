@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Bloom flower">
+  <defs>
+    <radialGradient id="bl-center" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#fff0a8"/>
+      <stop offset="1" stop-color="#ffb300"/>
+    </radialGradient>
+  </defs>
+  <!-- stem -->
+  <path d="M100 118 v56" stroke="#39ff14" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 150 q-26 -6 -34 -26 q26 -2 34 18" fill="#39ff14" fill-opacity="0.75"/>
+  <path d="M100 138 q26 -6 34 -26 q-26 -2 -34 18" fill="#39ff14" fill-opacity="0.75"/>
+  <!-- petals -->
+  <g>
+    <animateTransform attributeName="transform" type="rotate" values="0 100 78; 6 100 78; 0 100 78; -6 100 78; 0 100 78" dur="5s" repeatCount="indefinite"/>
+    <g fill="#ff2bd6" stroke="#a855f7" stroke-width="2">
+      <ellipse cx="100" cy="44" rx="15" ry="24"/>
+      <ellipse cx="100" cy="112" rx="15" ry="24"/>
+      <ellipse cx="66" cy="78" rx="24" ry="15"/>
+      <ellipse cx="134" cy="78" rx="24" ry="15"/>
+      <ellipse cx="76" cy="54" rx="15" ry="22" transform="rotate(-45 76 54)"/>
+      <ellipse cx="124" cy="54" rx="15" ry="22" transform="rotate(45 124 54)"/>
+      <ellipse cx="76" cy="102" rx="15" ry="22" transform="rotate(45 76 102)"/>
+      <ellipse cx="124" cy="102" rx="15" ry="22" transform="rotate(-45 124 102)"/>
+    </g>
+    <!-- face -->
+    <circle cx="100" cy="78" r="26" fill="url(#bl-center)" stroke="#ffb300" stroke-width="2"/>
+    <circle cx="91" cy="74" r="4" fill="#12093a"/>
+    <circle cx="109" cy="74" r="4" fill="#12093a"/>
+    <path d="M90 86 q10 9 20 0" fill="none" stroke="#12093a" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

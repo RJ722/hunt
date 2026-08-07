@@ -37,6 +37,15 @@ describe('App smoke render', () => {
     expect(screen.getByText(/ACCESS PANEL/i)).toBeTruthy()
     // 5 letter wheels for RELAY.
     expect(screen.getAllByRole('spinbutton')).toHaveLength(5)
+    // Artifact image is rendered.
+    expect(screen.getByRole('img')).toBeTruthy()
+  })
+
+  it('renders fixed gaps for spaces (garden -> "IN BLOOM" = 7 wheels)', () => {
+    setHash('#/t/garden')
+    render(<App />)
+    // "IN BLOOM" has 7 letters + 1 space; the space is not a wheel.
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(7)
   })
 
   it('renders the completion screen for the final tag', () => {

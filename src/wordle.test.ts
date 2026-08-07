@@ -30,6 +30,14 @@ describe('evaluateGuess', () => {
     expect(evaluateGuess('owlet', 'OWLET').every((s) => s === 'correct')).toBe(true)
   })
 
+  it('scores a space as correct when aligned in both guess and answer', () => {
+    // answer "IN BLOOM"; a guess that matches including the fixed space.
+    const res = evaluateGuess('IN BLOOM', 'IN BLOOM')
+    expect(res).toHaveLength(8)
+    expect(res.every((s) => s === 'correct')).toBe(true)
+    expect(res[2]).toBe('correct') // the space position
+  })
+
   describe('duplicate-letter handling', () => {
     it('does not over-credit a duplicate guess letter when answer has only one', () => {
       // answer ABIDE (one E), guess EERIE (three Es).

@@ -6,15 +6,40 @@ export interface Riddle {
   tagId: string
   /** Optional display title. */
   title?: string
-  /** The Wordle target word — A–Z letters only, uppercased on load. */
+  /** The Wordle target word — A–Z letters (spaces allowed), uppercased on load. */
   answer: string
   /** Optional theme/hint shown alongside the puzzle. */
   hint?: string
+  /** Optional resolved URL of an artifact image shown with the puzzle. */
+  artifactSrc?: string
   /** The clue body (revealed after the puzzle is solved), as markdown/plain text. */
   clue: string
 }
 
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/
+
+// Eagerly resolve every artifact image to a URL at build time.
+const artifactUrls = import.meta.glob('../data/artifacts/*.{svg,png}', {
+  query: '?url',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+function resolveArtifact(name: string, path: string): string {
+  const match = Object.entries(artifactUrls).find(([p]) =>
+    p.endsWith(`/${name}`),
+  )
+  if (!match) {
+    const available = Object.keys(artifactUrls)
+      .map((p) => p.split('/').pop())
+      .join(', ')
+    throw new Error(
+      `Riddle "${path}" references artifact "${name}" which does not exist ` +
+        `in src/data/artifacts (available: ${available}).`,
+    )
+  }
+  return match[1]
+}
 
 function parseMarkdown(raw: string, path: string): Riddle {
   const match = raw.match(FRONTMATTER_RE)
@@ -34,12 +59,22 @@ function parseMarkdown(raw: string, path: string): Riddle {
   if (typeof answerRaw !== 'string' || answerRaw.trim() === '') {
     throw new Error(`Riddle "${path}" is missing a string "answer".`)
   }
-  const answer = answerRaw.trim().toUpperCase()
-  if (!/^[A-Z]+$/.test(answer)) {
+  // Collapse any run of whitespace to a single space, then uppercase.
+  const answer = answerRaw.trim().replace(/\s+/g, ' ').toUpperCase()
+  if (!/^[A-Z]+( [A-Z]+)*$/.test(answer)) {
     throw new Error(
-      `Riddle "${path}" answer "${answerRaw}" must be letters A–Z only ` +
-        `(no spaces, digits, or punctuation) — the input is A–Z letter wheels.`,
+      `Riddle "${path}" answer "${answerRaw}" must be letters A–Z, with ` +
+        `single spaces between words only (no digits or punctuation) — the ` +
+        `input is A–Z letter wheels.`,
     )
+  }
+
+  let artifactSrc: string | undefined
+  if (data.artifact !== undefined) {
+    if (typeof data.artifact !== 'string' || data.artifact.trim() === '') {
+      throw new Error(`Riddle "${path}" has an invalid "artifact" (must be a filename).`)
+    }
+    artifactSrc = resolveArtifact(data.artifact.trim(), path)
   }
 
   return {
@@ -47,6 +82,7 @@ function parseMarkdown(raw: string, path: string): Riddle {
     title: typeof data.title === 'string' ? data.title : undefined,
     answer,
     hint: typeof data.hint === 'string' ? data.hint : undefined,
+    artifactSrc,
     clue,
   }
 }

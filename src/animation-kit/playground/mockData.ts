@@ -1,6 +1,13 @@
 import type { LetterStatus } from '../contract'
+import relayBot from '../../data/artifacts/relay-bot.svg?url'
 
 export const mockAnswer = 'RELAY'
+
+/** A spaced answer to exercise the fixed-gap rendering in the puzzle. */
+export const mockSpacedAnswer = 'IN BLOOM'
+
+/** Artifact image URL used by the playground wordle scene. */
+export const mockArtifact = relayBot
 
 /** A trivial local scorer so the playground needs no app dependencies. */
 export function mockEvaluate(answer: string) {

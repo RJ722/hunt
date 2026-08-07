@@ -28,14 +28,19 @@ export function WordleGuessGame({
   answerLength,
   answer,
   hint,
+  artifactSrc,
+  artifactAlt,
   maxAttempts,
   evaluateGuess,
   onResolved,
 }: WordleGuessGameProps) {
   const reduced = usePrefersReducedMotion()
-  const [guess, setGuess] = useState<string[]>(() =>
-    new Array(answerLength).fill('A'),
-  )
+  // Space positions are fixed and never guessed — render a gap instead of a wheel.
+  const answerChars = answer.toUpperCase().split('')
+  const isSpace = (i: number) => answerChars[i] === ' '
+  const initialGuess = () =>
+    Array.from({ length: answerLength }, (_, i) => (isSpace(i) ? ' ' : 'A'))
+  const [guess, setGuess] = useState<string[]>(initialGuess)
   const [submitted, setSubmitted] = useState<SubmittedRow[]>([])
   const [phase, setPhase] = useState<'playing' | 'solved' | 'revealed'>('playing')
   const [shakeKey, setShakeKey] = useState(0)
@@ -81,6 +86,33 @@ export function WordleGuessGame({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
+      {artifactSrc && (
+        <motion.img
+          src={artifactSrc}
+          alt={artifactAlt ?? ''}
+          width={120}
+          height={120}
+          draggable={false}
+          initial={{ opacity: 0, scale: reduced ? 1 : 0.85 }}
+          animate={
+            reduced
+              ? { opacity: 1 }
+              : { opacity: 1, scale: 1, y: [0, -8, 0] }
+          }
+          transition={
+            reduced
+              ? { duration: 0.3 }
+              : { y: { duration: 3.4, repeat: Infinity, ease: 'easeInOut' }, opacity: { duration: 0.4 }, scale: { duration: 0.4 } }
+          }
+          style={{
+            width: 120,
+            height: 120,
+            objectFit: 'contain',
+            filter: `drop-shadow(0 0 16px ${theme.cyan}66)`,
+            userSelect: 'none',
+          }}
+        />
+      )}
       <div style={{ textAlign: 'center' }}>
         <div
           style={{
@@ -119,27 +151,31 @@ export function WordleGuessGame({
               {...(isLastWrong ? { 'data-shake': shakeKey } : {})}
               style={{ display: 'flex', gap: 8, justifyContent: 'center' }}
             >
-              {row.letters.map((letter, c) => (
-                <div
-                  key={c}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: 'ui-monospace, monospace',
-                    fontSize: 22,
-                    fontWeight: 700,
-                    color: theme.bg,
-                    background: statusColor(row.statuses[c]),
-                    borderRadius: 8,
-                    boxShadow: `0 0 12px ${statusColor(row.statuses[c])}99`,
-                  }}
-                >
-                  {letter}
-                </div>
-              ))}
+              {row.letters.map((letter, c) =>
+                isSpace(c) ? (
+                  <div key={c} style={{ width: 20 }} aria-hidden="true" />
+                ) : (
+                  <div
+                    key={c}
+                    style={{
+                      width: 44,
+                      height: 44,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontFamily: 'ui-monospace, monospace',
+                      fontSize: 22,
+                      fontWeight: 700,
+                      color: theme.bg,
+                      background: statusColor(row.statuses[c]),
+                      borderRadius: 8,
+                      boxShadow: `0 0 12px ${statusColor(row.statuses[c])}99`,
+                    }}
+                  >
+                    {letter}
+                  </div>
+                ),
+              )}
             </motion.div>
           )
         })}
@@ -147,15 +183,23 @@ export function WordleGuessGame({
 
       {/* Active input row: the letter wheels. Hidden once resolved. */}
       {phase === 'playing' && (
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-          {guess.map((letter, i) => (
-            <LetterWheel
-              key={i}
-              value={letter}
-              onChange={(l) => setLetter(i, l)}
-              accent={theme.cyan}
-            />
-          ))}
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', alignItems: 'center' }}>
+          {guess.map((letter, i) =>
+            isSpace(i) ? (
+              <div
+                key={i}
+                aria-hidden="true"
+                style={{ width: 24 }}
+              />
+            ) : (
+              <LetterWheel
+                key={i}
+                value={letter}
+                onChange={(l) => setLetter(i, l)}
+                accent={theme.cyan}
+              />
+            ),
+          )}
         </div>
       )}
 

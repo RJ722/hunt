@@ -5,12 +5,14 @@ import { CompletionAnimation } from '../CompletionAnimation'
 import { theme } from '../theme'
 import {
   mockAnswer,
+  mockArtifact,
   mockClue,
   mockCompletion,
   mockEvaluate,
+  mockSpacedAnswer,
 } from './mockData'
 
-type Scene = 'wordle' | 'clue' | 'completion'
+type Scene = 'wordle' | 'spaced' | 'clue' | 'completion'
 
 /**
  * Dev-only harness for iterating on the animation kit in isolation, with mock
@@ -32,7 +34,7 @@ export function Playground() {
           flexWrap: 'wrap',
         }}
       >
-        {(['wordle', 'clue', 'completion'] as Scene[]).map((s) => (
+        {(['wordle', 'spaced', 'clue', 'completion'] as Scene[]).map((s) => (
           <button
             key={s}
             type="button"
@@ -60,10 +62,26 @@ export function Playground() {
             answerLength={mockAnswer.length}
             answer={mockAnswer}
             hint="A station that receives a signal and passes it along"
+            artifactSrc={mockArtifact}
+            artifactAlt="Relay bot"
             maxAttempts={6}
             evaluateGuess={mockEvaluate(mockAnswer)}
             onResolved={(solved) =>
               console.log('[playground] resolved, solved =', solved)
+            }
+          />
+        )}
+        {scene === 'spaced' && (
+          <WordleGuessGame
+            answerLength={mockSpacedAnswer.length}
+            answer={mockSpacedAnswer}
+            hint="Two words — spaces are fixed, you only guess the letters"
+            artifactSrc={mockArtifact}
+            artifactAlt="Relay bot"
+            maxAttempts={6}
+            evaluateGuess={mockEvaluate(mockSpacedAnswer)}
+            onResolved={(solved) =>
+              console.log('[playground] spaced resolved, solved =', solved)
             }
           />
         )}

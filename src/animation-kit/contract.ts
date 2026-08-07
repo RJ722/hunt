@@ -26,6 +26,14 @@ export interface WordleGuessGameProps {
   answer: string
   /** Optional theme/hint text to display with the puzzle. */
   hint?: string
+  /**
+   * Optional artifact image (e.g. an animated character) shown with the
+   * puzzle. Any positions in `answer` that are spaces are rendered as fixed
+   * gaps — the player never guesses them.
+   */
+  artifactSrc?: string
+  /** Alt text for the artifact image. */
+  artifactAlt?: string
   /** Maximum guesses before the answer is revealed (e.g. 6). */
   maxAttempts: number
   /** Pure scorer, pre-bound to this riddle's answer. */

@@ -8,12 +8,24 @@ describe('loadRiddles', () => {
       if (tag.isFinal) continue
       const riddle = getRiddle(tag.slug)
       expect(riddle, `riddle for ${tag.slug}`).toBeDefined()
-      expect(riddle!.answer).toMatch(/^[A-Z]+$/)
+      expect(riddle!.answer).toMatch(/^[A-Z]+( [A-Z]+)*$/)
       expect(riddle!.clue.length).toBeGreaterThan(0)
     }
   })
 
   it('exactly one final tag exists', () => {
     expect(tags.filter((t) => t.isFinal)).toHaveLength(1)
+  })
+
+  it('supports spaces in an answer (garden -> "IN BLOOM")', () => {
+    const riddle = getRiddle('garden')
+    expect(riddle?.answer).toBe('IN BLOOM')
+  })
+
+  it('resolves artifact frontmatter to a URL', () => {
+    const riddle = getRiddle('start')
+    expect(typeof riddle?.artifactSrc).toBe('string')
+    // May be a hashed URL in build or an inlined data URI under Vitest.
+    expect(riddle!.artifactSrc!.length).toBeGreaterThan(0)
   })
 })

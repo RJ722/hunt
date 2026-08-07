@@ -3,20 +3,30 @@ import { animate, motion, useMotionValue } from 'motion/react'
 import { LETTERS, theme, usePrefersReducedMotion } from './theme'
 
 const ITEM_H = 52
+const COPIES = 3
+const N = LETTERS.length // 26
+const MIDDLE = N // index where the middle alphabet copy starts
+
+const mod = (n: number, m: number) => ((n % m) + m) % m
+const spring = { type: 'spring', stiffness: 480, damping: 42 } as const
+// Seconds of coasting projected from the release velocity — higher = longer flick.
+const MOMENTUM = 0.28
+
+// Three stacked copies of the alphabet so the reel can wrap seamlessly. After
+// every interaction we snap back into the middle copy (invisible, same letter),
+// leaving a full alphabet of headroom in both directions.
+const STRIP = Array.from({ length: COPIES * N }, (_, i) => LETTERS[i % N])
 
 interface LetterWheelProps {
-  /** Currently selected letter (A–Z). */
   value: string
   onChange: (letter: string) => void
   disabled?: boolean
-  /** Glow accent colour. */
   accent?: string
 }
 
 /**
- * A vertical A–Z reel. Drag/swipe to spin and it snaps to the nearest letter,
- * like a vault access dial. Also exposes ▲/▼ controls for precise, accessible
- * selection. Emits the selected letter via onChange.
+ * A circular vertical A–Z reel. Drag/swipe or use ▲/▼ to spin; scrolling past
+ * A wraps to Z and past Z wraps to A. Snaps to the nearest letter and emits it.
  */
 export function LetterWheel({
   value,
@@ -25,35 +35,36 @@ export function LetterWheel({
   accent = theme.cyan,
 }: LetterWheelProps) {
   const reduced = usePrefersReducedMotion()
-  const index = Math.max(0, LETTERS.indexOf(value.toUpperCase()))
-  const y = useMotionValue(-index * ITEM_H)
-  const draggingRef = useRef(false)
+  const letterIndex = Math.max(0, LETTERS.indexOf(value.toUpperCase()))
+  // vIndex lives in the middle copy so there is room to wrap either way.
+  const y = useMotionValue(-(MIDDLE + letterIndex) * ITEM_H)
+  const busy = useRef(false)
 
-  // Keep the reel aligned when `value` changes from outside (e.g. reset).
+  // Re-align if `value` is changed from outside (e.g. reset / reveal) while idle.
   useEffect(() => {
-    if (draggingRef.current) return
-    const target = -index * ITEM_H
-    if (reduced) {
-      y.set(target)
-    } else {
-      const controls = animate(y, target, {
-        type: 'spring',
-        stiffness: 500,
-        damping: 40,
-      })
-      return () => controls.stop()
-    }
-  }, [index, reduced, y])
+    if (busy.current) return
+    y.set(-(MIDDLE + letterIndex) * ITEM_H)
+  }, [letterIndex, y])
 
-  const settleTo = (i: number) => {
-    const clamped = Math.min(LETTERS.length - 1, Math.max(0, i))
-    onChange(LETTERS[clamped])
-  }
-
-  const step = (delta: number) => {
+  // Animate the reel by `delta` items, then recenter into the middle copy.
+  const spin = (delta: number, fromY: number) => {
     if (disabled) return
-    settleTo(index + delta)
+    const li = mod(letterIndex + delta, N)
+    busy.current = true
+    onChange(LETTERS[li])
+    const target = fromY - delta * ITEM_H
+    const commit = () => {
+      y.set(-(MIDDLE + li) * ITEM_H) // invisible: same letter, middle copy
+      busy.current = false
+    }
+    if (reduced) {
+      commit()
+    } else {
+      animate(y, target, { ...spring, onComplete: commit })
+    }
   }
+
+  const step = (delta: number) => spin(delta, y.get())
 
   return (
     <div
@@ -82,65 +93,94 @@ export function LetterWheel({
         style={{
           position: 'relative',
           width: 56,
-          height: ITEM_H,
+          height: ITEM_H * 3,
           overflow: 'hidden',
-          borderRadius: 10,
+          borderRadius: 12,
           background: theme.panel,
           border: `1px solid ${theme.panelEdge}`,
-          boxShadow: `0 0 14px ${accent}44, inset 0 0 18px #0008`,
+          boxShadow: `0 0 14px ${accent}44, inset 0 0 22px #0009`,
+          touchAction: 'none',
         }}
       >
-        {/* selection frame */}
+        {/* center selection frame */}
         <div
           style={{
             position: 'absolute',
-            inset: 0,
+            left: 0,
+            right: 0,
+            top: ITEM_H,
+            height: ITEM_H,
             borderTop: `1px solid ${accent}66`,
             borderBottom: `1px solid ${accent}66`,
             pointerEvents: 'none',
             zIndex: 2,
           }}
         />
-        {/* fade top/bottom */}
         <div style={fadeStyle('top')} />
         <div style={fadeStyle('bottom')} />
 
         <motion.div
-          style={{ y, position: 'absolute', left: 0, right: 0, top: 0 }}
+          // `top: ITEM_H` centers the selected item in the middle row.
+          style={{ y, position: 'absolute', left: 0, right: 0, top: ITEM_H, touchAction: 'none' }}
           drag={disabled ? false : 'y'}
-          dragConstraints={{
-            top: -(LETTERS.length - 1) * ITEM_H,
-            bottom: 0,
-          }}
-          dragElastic={0.08}
+          dragConstraints={{ top: -(STRIP.length - 1) * ITEM_H, bottom: 0 }}
+          dragElastic={0.06}
+          dragMomentum={false}
           onDragStart={() => {
-            draggingRef.current = true
+            busy.current = true
           }}
-          onDragEnd={() => {
-            draggingRef.current = false
-            const nearest = Math.round(-y.get() / ITEM_H)
-            settleTo(nearest)
+          onDragEnd={(_e, info) => {
+            const current = y.get()
+            const velocity = info.velocity.y // px/s (up = negative)
+            // Project where the flick would coast to, so a fast swipe carries
+            // through several letters instead of stopping under the finger.
+            const projected = current + velocity * MOMENTUM
+            const rawNearest = Math.round(-projected / ITEM_H)
+            // Keep the settle target inside the rendered strip.
+            const maxIndex = STRIP.length - 1
+            const nearest = Math.min(Math.max(rawNearest, 0), maxIndex)
+            const li = mod(nearest, N)
+            onChange(LETTERS[li])
+            const settle = () => {
+              y.set(-(MIDDLE + li) * ITEM_H)
+              busy.current = false
+            }
+            if (reduced) {
+              settle()
+            } else {
+              // Seed the spring with the release velocity for a continuous glide.
+              animate(y, -nearest * ITEM_H, {
+                type: 'spring',
+                stiffness: 170,
+                damping: 30,
+                velocity,
+                onComplete: settle,
+              })
+            }
           }}
         >
-          {LETTERS.map((letter, i) => (
-            <div
-              key={letter}
-              style={{
-                height: ITEM_H,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 26,
-                fontWeight: 700,
-                fontFamily: 'ui-monospace, monospace',
-                color: i === index ? accent : theme.textDim,
-                textShadow: i === index ? `0 0 12px ${accent}` : 'none',
-                userSelect: 'none',
-              }}
-            >
-              {letter}
-            </div>
-          ))}
+          {STRIP.map((letter, i) => {
+            const selected = i === MIDDLE + letterIndex
+            return (
+              <div
+                key={i}
+                style={{
+                  height: ITEM_H,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 26,
+                  fontWeight: 700,
+                  fontFamily: 'ui-monospace, monospace',
+                  color: selected ? accent : theme.textDim,
+                  textShadow: selected ? `0 0 12px ${accent}` : 'none',
+                  userSelect: 'none',
+                }}
+              >
+                {letter}
+              </div>
+            )
+          })}
         </motion.div>
       </div>
 
@@ -177,7 +217,7 @@ function fadeStyle(edge: 'top' | 'bottom'): React.CSSProperties {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: 14,
+    height: ITEM_H,
     [edge]: 0,
     zIndex: 1,
     pointerEvents: 'none',

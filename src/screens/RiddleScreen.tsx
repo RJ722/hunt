@@ -52,6 +52,8 @@ export function RiddleScreen({ slug }: RiddleScreenProps) {
             answerLength={riddle.answer.length}
             answer={riddle.answer}
             hint={riddle.hint}
+            artifactSrc={riddle.artifactSrc}
+            artifactAlt={riddle.title ? `${riddle.title} character` : 'Riddle character'}
             maxAttempts={6}
             evaluateGuess={boundEvaluate}
             onResolved={() => setGateCleared(true)}
