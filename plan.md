@@ -13,7 +13,7 @@ AI agent), while staying in one repo with a clean handoff boundary.
 - **NFC mechanism**: No Web NFC API (unsupported on iOS Safari and all desktop
   browsers). Each physical tag is pre-written (via a phone NFC-writing app,
   e.g. NFC Tools) with a URL containing an arbitrary slug we choose —
-  `https://<user>.github.io/nfcunt/#/t/<slug>`. Tapping just opens the browser
+  `https://hunt.onlyfork.at/#/t/<slug>`. Tapping just opens the browser
   — works on every phone.
 - **Routing**: Hash-based (`#/t/<slug>`) — zero server config, works on any
   static host including GitHub Pages.
@@ -209,11 +209,11 @@ export interface CompletionAnimationProps {
   completion without doing the hunt. This is obfuscation, not security — an
   accepted trade-off for a casual, fun treasure hunt with no backend.
 - **Tag-URL permanence (operational).** The full URL (origin + base path +
-  hash) is physically written into each NFC tag. Renaming the repo, adding a
-  custom domain, or changing hosts later invalidates every tag and requires
-  re-writing them. Decision: **finalize the production URL/domain before
-  writing any physical tags.** The Vite `base` must match the GitHub Pages repo
-  path (e.g. `/nfcunt/`), or `/` if a custom domain is used.
+  hash) is physically written into each NFC tag. Renaming the repo, changing
+  the custom domain, or changing hosts later invalidates every tag and
+  requires re-writing them. **Finalized: `hunt.onlyfork.at`**, served at the
+  domain root (`base: '/'` in `vite.config.ts`), backed by repo `rj722/hunt`
+  on GitHub Pages.
 
 ## Creative Direction / Design Brief
 This section is a starting brief for whoever works in the design workstream

@@ -14,14 +14,14 @@ opens a normal web link, so it works on **any phone** (iOS or Android).
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173/nfcunt/
+npm run dev        # http://localhost:5173/
 npm test           # Wordle scoring + loader + render smoke tests
 npm run build      # type-check + production build into dist/
 npm run lint
 ```
 
 Try it locally by visiting a tag route, e.g.
-`http://localhost:5173/nfcunt/#/t/start`.
+`http://localhost:5173/#/t/start`.
 
 ---
 
@@ -29,7 +29,7 @@ Try it locally by visiting a tag route, e.g.
 
 - **No Web NFC API.** The Web NFC API only works on Android Chrome and never on
   iOS Safari or desktop. Instead, each physical tag is pre-written with a URL
-  like `https://<user>.github.io/nfcunt/#/t/<slug>`. Tapping the tag just opens
+  like `https://hunt.onlyfork.at/#/t/<slug>`. Tapping the tag just opens
   that link.
 - **Hash routing.** Routes live in the URL hash (`#/t/<slug>`), so any static
   host serves it with zero config.
@@ -91,26 +91,25 @@ Do this once per tag with a phone NFC-writing app (e.g. **NFC Tools**):
 
 1. Decide your final production URL first (see the ⚠️ warning below).
 2. In the NFC app, choose "Write" → "Add a record" → "URL".
-3. Enter the tag's URL: `https://<user>.github.io/nfcunt/#/t/<slug>`, using the
+3. Enter the tag's URL: `https://hunt.onlyfork.at/#/t/<slug>`, using the
    `slug` from `tags.ts` (e.g. `.../#/t/library`).
 4. Hold the tag to the phone to write it. Repeat for each tag.
 
 ### Tag URL reference
 
-Every tag's URL is `<site-base>#/t/<slug>`. Replace `<user>` with your GitHub
-username (and the repo name if it isn't `nfcunt`). These slugs are the single
-source of truth in [`src/data/tags.ts`](src/data/tags.ts) — keep this table in
-sync if you add, rename, or remove tags.
+Every tag's URL is `https://hunt.onlyfork.at/#/t/<slug>`. These slugs are the
+single source of truth in [`src/data/tags.ts`](src/data/tags.ts) — keep this
+table in sync if you add, rename, or remove tags.
 
 | Order | Slug | Riddle / role | Answer | Production URL to burn |
 | ----- | ---- | ------------- | ------ | ---------------------- |
-| 1 | `start` | Treat One | `RELAY` | `https://<user>.github.io/nfcunt/#/t/start` |
-| 2 | `library` | Treat Two | `PAGE` | `https://<user>.github.io/nfcunt/#/t/library` |
-| 3 | `garden` | Treat Three | `IN BLOOM` | `https://<user>.github.io/nfcunt/#/t/garden` |
-| 🎉 | `vault` | Final — celebration (no puzzle) | — | `https://<user>.github.io/nfcunt/#/t/vault` |
+| 1 | `start` | Treat One | `RELAY` | `https://hunt.onlyfork.at/#/t/start` |
+| 2 | `library` | Treat Two | `PAGE` | `https://hunt.onlyfork.at/#/t/library` |
+| 3 | `garden` | Treat Three | `IN BLOOM` | `https://hunt.onlyfork.at/#/t/garden` |
+| 🎉 | `vault` | Final — celebration (no puzzle) | — | `https://hunt.onlyfork.at/#/t/vault` |
 
 For local testing before you burn tags, swap the base for the dev server, e.g.
-`http://localhost:5173/nfcunt/#/t/start` (the dev server may pick another port
+`http://localhost:5173/#/t/start` (the dev server may pick another port
 such as `5174` if `5173` is busy — check the terminal output).
 
 > **Tip:** The hunt order is defined by the *clues*, not the tags themselves —
@@ -120,9 +119,9 @@ such as `5174` if `5173` is busy — check the terminal output).
 
 > ### ⚠️ Finalize your URL before writing tags
 > The full URL is physically burned into each tag. If you later rename the repo,
-> add a custom domain, or move hosts, **every tag must be re-written.** Decide
-> the production URL/domain up front. If you use a custom domain, also change
-> `base` in `vite.config.ts` from `'/nfcunt/'` to `'/'`.
+> change the custom domain, or move hosts, **every tag must be re-written.**
+> The production domain is finalized as `hunt.onlyfork.at`, served at the
+> domain root (`base: '/'` in `vite.config.ts`).
 
 > ### 🔓 Frontend-only means no secrecy
 > All answers, all clues, and the `final` slug ship in the JavaScript bundle. A
@@ -136,11 +135,14 @@ such as `5174` if `5173` is busy — check the terminal output).
 
 `.github/workflows/deploy.yml` builds and deploys `dist/` on every push to
 `main`. To enable it: in the repo, go to **Settings → Pages → Build and
-deployment → Source: GitHub Actions**. The site publishes at
-`https://<user>.github.io/nfcunt/`.
+deployment → Source: GitHub Actions**, then set **Settings → Pages → Custom
+domain** to `hunt.onlyfork.at` (requires a DNS `CNAME` record for `hunt`
+pointing at `rj722.github.io`) and enable **Enforce HTTPS** once the
+certificate is issued. The site publishes at `https://hunt.onlyfork.at/`.
 
-If your repo is **not** named `nfcunt`, update `base` in `vite.config.ts` to
-match (`/<repo-name>/`).
+Note: `actions/deploy-pages` ignores any `CNAME` file committed to the repo —
+the custom domain must be set via the Settings UI (or `gh api`), not the
+workflow.
 
 ---
 

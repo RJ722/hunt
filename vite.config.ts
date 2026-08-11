@@ -2,11 +2,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// base must match the GitHub Pages repo path (https://<user>.github.io/nfcunt/).
-// If you later move to a custom domain, change this to '/'.
+// base is '/' because the site is served from a custom domain (hunt.onlyfork.at)
+// at the domain root. If you ever move back to <user>.github.io/<repo>/ without
+// a custom domain, change this to '/<repo-name>/'.
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/nfcunt/',
+  base: '/',
   plugins: [react()],
   test: {
     environment: 'node',
