@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion, useAnimationControls } from 'motion/react'
 import type { LetterStatus, WordleGuessGameProps } from './contract'
 import { LetterWheel } from './LetterWheel'
 import { ScallopedCard } from './ScallopedCard'
@@ -13,11 +13,7 @@ interface SubmittedRow {
 function tileBg(s: LetterStatus): string {
   if (s === 'correct') return theme.sage
   if (s === 'present') return theme.gold
-  return theme.panelEdge
-}
-
-function tileText(s: LetterStatus): string {
-  return s === 'absent' ? theme.textDim : theme.cream
+  return theme.rose // wrong letter — soft terracotta "nope"
 }
 
 function isAllCorrect(statuses: LetterStatus[]): boolean {
@@ -40,9 +36,11 @@ export function WordleGuessGame({
   onResolved,
 }: WordleGuessGameProps) {
   const reduced = usePrefersReducedMotion()
+  const katControls = useAnimationControls()
   // Space positions are fixed and never guessed — render a gap instead of a wheel.
   const answerChars = answer.toUpperCase().split('')
   const isSpace = (i: number) => answerChars[i] === ' '
+  const firstLetterPos = answerChars.findIndex((c) => c !== ' ')
   const initialGuess = () =>
     Array.from({ length: answerLength }, (_, i) => (isSpace(i) ? ' ' : 'A'))
   const [guess, setGuess] = useState<string[]>(initialGuess)
@@ -53,6 +51,47 @@ export function WordleGuessGame({
 
   const attemptsUsed = submitted.length
   const locked = phase !== 'playing'
+
+  const startFloat = () => {
+    if (reduced) {
+      katControls.set({ opacity: 1, y: 0, rotate: 0, scale: 1 })
+      return
+    }
+    katControls.start({
+      opacity: 1,
+      scale: 1,
+      rotate: 0,
+      y: [0, -6, 0],
+      transition: { y: { duration: 3.4, repeat: Infinity, ease: 'easeInOut' } },
+    })
+  }
+
+  // Kick off the gentle idle float once on mount.
+  useEffect(() => {
+    katControls.set({ opacity: 0, scale: reduced ? 1 : 0.85, y: 0, rotate: 0 })
+    katControls.start({ opacity: 1, scale: 1 }, { duration: 0.4 }).then(startFloat)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // On a wrong guess, Kat droops + shakes her head, then resumes floating.
+  useEffect(() => {
+    if (shakeKey === 0) return
+    if (reduced) return
+    let cancelled = false
+    const react = async () => {
+      await katControls.start({
+        y: 8,
+        rotate: [0, -9, 9, -6, 6, 0],
+        transition: { duration: 0.55, ease: 'easeInOut' },
+      })
+      if (!cancelled) startFloat()
+    }
+    react()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shakeKey])
 
   const finish = (solved: boolean) => {
     if (resolvedRef.current) return
@@ -98,13 +137,7 @@ export function WordleGuessGame({
             width={78}
             height={78}
             draggable={false}
-            initial={{ opacity: 0, scale: reduced ? 1 : 0.85 }}
-            animate={reduced ? { opacity: 1 } : { opacity: 1, scale: 1, y: [0, -6, 0] }}
-            transition={
-              reduced
-                ? { duration: 0.3 }
-                : { y: { duration: 3.4, repeat: Infinity, ease: 'easeInOut' }, opacity: { duration: 0.4 }, scale: { duration: 0.4 } }
-            }
+            animate={katControls}
             style={{ width: 78, height: 78, objectFit: 'contain' }}
           />
         )}
@@ -112,14 +145,13 @@ export function WordleGuessGame({
         <div
           style={{
             fontFamily: fonts.display,
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 700,
-            letterSpacing: 3,
-            textTransform: 'uppercase',
+            letterSpacing: 1,
             color: theme.sage,
           }}
         >
-          Paw Print Puzzle
+          🐾 Spin the petals to spell the word
         </div>
 
         {hint && (
@@ -139,6 +171,31 @@ export function WordleGuessGame({
           </p>
         )}
 
+        {/* Attempt pips — used tries fill in, sitting above the guess history. */}
+        {phase === 'playing' && (
+          <div
+            style={{ display: 'flex', gap: 7 }}
+            aria-label={`${maxAttempts - attemptsUsed} tries left`}
+          >
+            {Array.from({ length: maxAttempts }, (_, i) => {
+              const spent = i < attemptsUsed
+              return (
+                <span
+                  key={i}
+                  style={{
+                    width: 9,
+                    height: 9,
+                    borderRadius: '50%',
+                    background: spent ? theme.rose : 'transparent',
+                    border: `1.5px solid ${spent ? theme.rose : theme.panelEdge}`,
+                    transition: 'background 0.2s ease',
+                  }}
+                />
+              )
+            })}
+          </div>
+        )}
+
         {/* Submitted guesses as soft rounded tiles. */}
         {submitted.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -149,10 +206,10 @@ export function WordleGuessGame({
                   key={r}
                   animate={
                     isLastWrong && !reduced
-                      ? { x: [0, -6, 6, -4, 4, 0] }
+                      ? { x: [0, -8, 8, -5, 5, 0] }
                       : {}
                   }
-                  transition={{ duration: 0.4 }}
+                  transition={{ duration: 0.42 }}
                   {...(isLastWrong ? { 'data-shake': shakeKey } : {})}
                   style={{ display: 'flex', gap: 6, justifyContent: 'center' }}
                 >
@@ -171,7 +228,7 @@ export function WordleGuessGame({
                           fontFamily: fonts.display,
                           fontSize: 20,
                           fontWeight: 700,
-                          color: tileText(row.statuses[c]),
+                          color: theme.cream,
                           background: tileBg(row.statuses[c]),
                           borderRadius: 12,
                           boxShadow: `0 2px 5px ${theme.panelEdge}88`,
@@ -199,36 +256,34 @@ export function WordleGuessGame({
                   value={letter}
                   onChange={(l) => setLetter(i, l)}
                   accent={theme.peach}
+                  demo={i === firstLetterPos}
                 />
               ),
             )}
           </div>
         )}
 
-        {/* Footer: one compact group — button with attempt pips beneath it. */}
+        {/* Footer: a quiet "check" affordance + gentle nudge after a wrong try. */}
         {phase === 'playing' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <button type="button" onClick={submit} style={submitStyle}>
-              Sniff it out 🐾
+              Check the word
             </button>
-            <div style={{ display: 'flex', gap: 7 }} aria-label={`${maxAttempts - attemptsUsed} tries left`}>
-              {Array.from({ length: maxAttempts }, (_, i) => {
-                const spent = i < attemptsUsed
-                return (
-                  <span
-                    key={i}
-                    style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: '50%',
-                      background: spent ? 'transparent' : theme.peach,
-                      border: `1.5px solid ${spent ? theme.panelEdge : theme.peach}`,
-                      transition: 'background 0.2s ease',
-                    }}
-                  />
-                )
-              })}
-            </div>
+            {submitted.length > 0 && (
+              <motion.div
+                key={submitted.length}
+                initial={reduced ? false : { opacity: 0, y: -3 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{
+                  fontFamily: fonts.body,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: theme.rose,
+                }}
+              >
+                Not quite — give the petals another spin 🐾
+              </motion.div>
+            )}
           </div>
         )}
 
@@ -265,15 +320,14 @@ export function WordleGuessGame({
 }
 
 const submitStyle: React.CSSProperties = {
-  padding: '12px 30px',
+  padding: '9px 22px',
   borderRadius: 999,
-  border: 'none',
-  background: theme.peach,
-  color: theme.cream,
+  border: `1.5px solid ${theme.panelEdge}`,
+  background: 'transparent',
+  color: theme.textDim,
   fontFamily: fonts.display,
-  fontSize: 16,
-  fontWeight: 700,
-  letterSpacing: 0.5,
+  fontSize: 14,
+  fontWeight: 600,
+  letterSpacing: 0.3,
   cursor: 'pointer',
-  boxShadow: `0 4px 0 ${theme.blush}, 0 6px 12px ${theme.peach}55`,
 }

@@ -23,6 +23,8 @@ interface LetterWheelProps {
   onChange: (letter: string) => void
   disabled?: boolean
   accent?: string
+  /** When true, spin to a random letter once on mount to teach the gesture. */
+  demo?: boolean
 }
 
 /**
@@ -35,6 +37,7 @@ export function LetterWheel({
   onChange,
   disabled = false,
   accent = theme.peach,
+  demo = false,
 }: LetterWheelProps) {
   const reduced = usePrefersReducedMotion()
   const letterIndex = Math.max(0, LETTERS.indexOf(value.toUpperCase()))
@@ -42,6 +45,7 @@ export function LetterWheel({
   const y = useMotionValue(-(MIDDLE + letterIndex) * ITEM_H)
   const busy = useRef(false)
   const viewportRef = useRef<HTMLDivElement>(null)
+  const demoAnim = useRef<{ stop: () => void } | null>(null)
 
   // Which strip row is currently centered — drives the "pop" as the reel moves.
   const [centerRow, setCenterRow] = useState(MIDDLE + letterIndex)
@@ -67,6 +71,27 @@ export function LetterWheel({
     busy.current = false
   }
 
+  // ── One-time onboarding: spin to a random letter to teach the gesture ─────
+  useEffect(() => {
+    if (!demo || reduced || disabled) return
+    const steps = 7 + Math.floor(Math.random() * 11) // 7..17 letters of travel
+    const startRow = Math.round(-y.get() / ITEM_H)
+    const targetRow = startRow + steps
+    const li = mod(targetRow, N)
+    busy.current = true
+    const controls = animate(y, -targetRow * ITEM_H, {
+      duration: 1.15,
+      ease: [0.15, 0.85, 0.25, 1], // quick spin, gentle settle
+      onComplete: () => {
+        onChangeRef.current(LETTERS[li])
+        settleTo(li)
+      },
+    })
+    demoAnim.current = controls
+    return () => controls.stop()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // ── Desktop mouse-wheel / trackpad stepping ──────────────────────────────
   useEffect(() => {
     const el = viewportRef.current
@@ -79,6 +104,7 @@ export function LetterWheel({
     const onWheel = (e: WheelEvent) => {
       if (disabledRef.current) return
       e.preventDefault() // don't let the page scroll while spinning a reel
+      demoAnim.current?.stop()
       acc += e.deltaY
       if (Math.abs(acc) < WHEEL_STEP) return
       const dir = acc > 0 ? 1 : -1
@@ -146,6 +172,7 @@ export function LetterWheel({
           dragElastic={0.06}
           dragMomentum={false}
           onDragStart={() => {
+            demoAnim.current?.stop()
             busy.current = true
           }}
           onDragEnd={(_e, info) => {

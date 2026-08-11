@@ -336,3 +336,43 @@ degrade to static; text appears instantly).
 ### Verification
 `oxlint` clean · `tsc -b && vite build` succeeds (Playground still code-split) ·
 `vitest` 18/18 (App smoke-test copy assertions updated to the new strings).
+
+---
+
+## UX feedback round — Puzzle screen onboarding & feedback (2026-08-11)
+
+Refinements to teach first-time players (each tag is a surprise; they have no
+prior context) and to give clearer right/wrong feedback.
+
+### Onboarding
+- **Load demo spin**: on mount the first letter reel auto-scrolls to a random
+  letter (`LetterWheel demo` prop; 7–17 letter roll, eased). It self-cancels the
+  instant the player drags or wheels any reel. Skipped under
+  `prefers-reduced-motion`/disabled. Teaches the spin gesture without copy.
+- **Instructional caption**: "Paw Print Puzzle" → **"🐾 Spin the petals to spell
+  the word"** so players know the task immediately.
+
+### Feedback
+- **Attempt pips relocated**: moved out of the footer to a row **below the hint,
+  above the guess history**. Spent tries now fill **red** (`theme.rose`);
+  remaining are hollow tan. `aria-label` retained.
+- **De-emphasized submit button**: bold peach filled pill → quiet outline/ghost
+  (transparent bg, tan border, `textDim`), copy changed to **"Check the word"**
+  (was "Sniff it out 🐾") so it isn't pressed just for fun.
+- **Wrong-answer negative feedback** (layered):
+  - Wrong-letter tiles turn **red** (`tileBg` absent → `theme.rose`).
+  - The just-submitted guess **row shakes**.
+  - A red nudge appears: **"Not quite — give the petals another spin 🐾"**.
+  - Spent attempt pips fill red (see above).
+  - **Kat sprite reacts**: on a wrong guess she **droops + shakes her head**
+    (`useAnimationControls`), then resumes her idle float. The idle float itself
+    now runs through the same controls (mount fade-in → looping bob).
+
+### Tokens
+- Added `theme.rose` (`#e08877`) and `theme.roseSoft` (`#f6c9be`) for negative
+  feedback.
+
+### Verification
+`oxlint` clean · `tsc -b && vite build` succeeds · `vitest` 18/18
+(App caption assertion updated `/Paw Print Puzzle/i` → `/Spin the petals/i`).
+All new motion honors `prefers-reduced-motion`.

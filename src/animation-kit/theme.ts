@@ -25,6 +25,9 @@ export const theme = {
   gold: '#f3b53f',
   cream: '#fff3e0',
   blush: '#f6c6ce',
+  // Gentle negatives (wrong-guess feedback) — soft terracotta, never harsh red.
+  rose: '#e08877',
+  roseSoft: '#f6c9be',
 } as const
 
 /** Font stacks (loaded via Google Fonts in index.html). */
