@@ -53,6 +53,7 @@ export function WordleGuessGame({
   const [shakeKey, setShakeKey] = useState(0)
   const resolvedRef = useRef(false)
   const hasSpunRef = useRef(false)
+  const historyRef = useRef<HTMLDivElement>(null)
   const [showHint, setShowHint] = useState(false)
 
   const attemptsUsed = submitted.length
@@ -141,6 +142,13 @@ export function WordleGuessGame({
     const row: SubmittedRow = { letters: [...guess], statuses }
     const nextSubmitted = [...submitted, row]
     setSubmitted(nextSubmitted)
+    // Keep the newest guess in view instead of letting the card (and the
+    // whole page) grow taller with every retry — the history scrolls in its
+    // own small strip so the layout height stays constant past 2+ retries.
+    requestAnimationFrame(() => {
+      const el = historyRef.current
+      if (el) el.scrollTop = el.scrollHeight
+    })
 
     if (isAllCorrect(statuses)) {
       finish(true)
@@ -263,9 +271,24 @@ export function WordleGuessGame({
           </div>
         )}
 
-        {/* Submitted guesses as soft rounded tiles. */}
+        {/* Submitted guesses as soft rounded tiles. Capped + scrollable so
+            piling up retries doesn't keep growing the card (and force the
+            whole iPhone viewport to scroll) — only the last couple of rows
+            show at once, newest kept in view. */}
         {submitted.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <div
+            ref={historyRef}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 7,
+              maxHeight: 100,
+              overflowY: 'auto',
+              overscrollBehavior: 'contain',
+              width: '100%',
+              paddingBottom: 2,
+            }}
+          >
             {submitted.map((row, r) => {
               const isLastWrong = r === submitted.length - 1 && phase === 'playing'
               return (
