@@ -30,6 +30,8 @@ export function WordleGuessGame({
   answerLength,
   answer,
   hint,
+  hint2,
+  hint3,
   artifactSrc,
   artifactAlt,
   maxAttempts,
@@ -55,6 +57,13 @@ export function WordleGuessGame({
 
   const attemptsUsed = submitted.length
   const locked = phase !== 'playing'
+
+  // Escalating stuck-player nudges — reveal once the player has genuinely
+  // struggled, and stay visible (both can stack) so help never disappears.
+  const activeDeepHints = [
+    attemptsUsed >= 3 && hint2 ? hint2 : null,
+    attemptsUsed >= maxAttempts - 1 && hint3 ? hint3 : null,
+  ].filter((h): h is string => h !== null)
 
   const startFloat = () => {
     if (reduced) {
@@ -218,6 +227,39 @@ export function WordleGuessGame({
                 />
               )
             })}
+          </div>
+        )}
+
+        {/* Stuck-player nudges — deeper hints that stack in once earned. */}
+        {phase === 'playing' && activeDeepHints.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', maxWidth: 320 }}>
+            <AnimatePresence initial={false}>
+              {activeDeepHints.map((h, i) => (
+                <motion.div
+                  key={i}
+                  initial={reduced ? false : { opacity: 0, y: -6, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 8,
+                    padding: '9px 13px',
+                    borderRadius: 14,
+                    background: theme.lavenderSoft,
+                    border: `1.5px dashed ${theme.lavender}`,
+                    fontFamily: fonts.body,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    lineHeight: 1.4,
+                    color: theme.text,
+                  }}
+                >
+                  <span aria-hidden="true">💡</span>
+                  <span>{h}</span>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
 

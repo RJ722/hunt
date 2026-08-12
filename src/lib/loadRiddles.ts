@@ -10,6 +10,17 @@ export interface Riddle {
   answer: string
   /** Optional theme/hint shown alongside the puzzle. */
   hint?: string
+  /**
+   * Optional deeper hint, revealed only after 3 failed guess attempts (i.e.
+   * once `attemptsUsed >= 3`) — a nudge for a player who's stuck.
+   */
+  hint2?: string
+  /**
+   * Optional final hint, revealed before the player's last attempt (i.e.
+   * once `attemptsUsed === maxAttempts - 1`) — a stronger nudge before the
+   * answer would otherwise be auto-revealed.
+   */
+  hint3?: string
   /** Optional resolved URL of an artifact image shown with the puzzle. */
   artifactSrc?: string
   /** The clue body (revealed after the puzzle is solved), as markdown/plain text. */
@@ -82,6 +93,8 @@ function parseMarkdown(raw: string, path: string): Riddle {
     title: typeof data.title === 'string' ? data.title : undefined,
     answer,
     hint: typeof data.hint === 'string' ? data.hint : undefined,
+    hint2: typeof data.hint2 === 'string' ? data.hint2 : undefined,
+    hint3: typeof data.hint3 === 'string' ? data.hint3 : undefined,
     artifactSrc,
     clue,
   }

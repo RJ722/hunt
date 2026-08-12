@@ -62,6 +62,8 @@ export function Playground() {
             answerLength={mockAnswer.length}
             answer={mockAnswer}
             hint="A little race where friends pass a baton paw to paw"
+            hint2="It's 5 letters, starts with R and ends with Y"
+            hint3="Think '___ race' — teammates handing something off one after another"
             artifactSrc={mockArtifact}
             artifactAlt="Curious Kat"
             maxAttempts={6}

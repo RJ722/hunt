@@ -27,6 +27,18 @@ export interface WordleGuessGameProps {
   /** Optional theme/hint text to display with the puzzle. */
   hint?: string
   /**
+   * Optional deeper hint, surfaced only once the player is visibly stuck —
+   * after their 3rd failed attempt (`attemptsUsed >= 3`). Absent = no extra
+   * hint appears at that point.
+   */
+  hint2?: string
+  /**
+   * Optional strongest hint, surfaced right before the player's very last
+   * attempt (`attemptsUsed === maxAttempts - 1`), i.e. one attempt before the
+   * answer would otherwise be auto-revealed. Absent = no extra hint appears.
+   */
+  hint3?: string
+  /**
    * Optional artifact image (e.g. an animated character) shown with the
    * puzzle. Any positions in `answer` that are spaces are rendered as fixed
    * gaps — the player never guesses them.

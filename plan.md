@@ -376,3 +376,50 @@ prior context) and to give clearer right/wrong feedback.
 `oxlint` clean · `tsc -b && vite build` succeeds · `vitest` 18/18
 (App caption assertion updated `/Paw Print Puzzle/i` → `/Spin the petals/i`).
 All new motion honors `prefers-reduced-motion`.
+
+---
+
+## Escalating stuck-player hints (2026-08-12)
+
+Riddles already had a single, always-visible `hint:` (a theme clue shown
+alongside the puzzle from the start). This adds two *optional*, progressively
+deeper hints that surface only once a player is genuinely stuck, without
+touching the design/logic contract boundary's existing shape (it's additive).
+
+### Data / contract
+- New optional riddle frontmatter fields: `hint2` (surfaces after the 3rd
+  failed attempt, i.e. `attemptsUsed >= 3`) and `hint3` (surfaces before the
+  player's very last attempt, i.e. `attemptsUsed === maxAttempts - 1`, one
+  attempt before the answer would otherwise auto-reveal). Both are optional —
+  a riddle that omits them simply shows no extra nudge at that threshold; no
+  load-time validation error, unlike required fields (`tagId`/`answer`).
+- `loadRiddles.ts` — parses `hint2`/`hint3` the same way as `hint` (plain
+  optional strings, no extra validation needed since they're free text).
+- `animation-kit/contract.ts` — `WordleGuessGameProps` gained `hint2?`/`hint3?`
+  with doc comments spelling out the exact attempt thresholds, so the
+  attempt-count semantics live in the shared contract rather than being
+  re-derived independently by each workstream.
+- `RiddleScreen.tsx` passes `riddle.hint2`/`riddle.hint3` through unchanged.
+
+### UI (`WordleGuessGame.tsx`)
+- Kept fully separate from the existing rose "Not quite — give it another
+  spin 🐾" nudge (which stays pure guess-quality feedback). The new hints are
+  a distinct, dashed **lavender** callout card (💡 + hint text) — the
+  storybook palette's "gentle help" accent, contrasting with rose ("wrong")
+  and sage ("right").
+- Positioned between the attempt pips and the submitted-guess history, so it
+  reads as "here's some extra help" rather than blocking the puzzle itself.
+- Both hints can stack (once each threshold is crossed they both stay
+  visible) — help is additive and never disappears once earned.
+- Springs in the same way as the existing "drag a letter" onboarding tip
+  (`type: 'spring'`), degrading to an instant appearance under
+  `prefers-reduced-motion` via the existing `reduced` flag.
+
+### Sample content
+- `start.md` / `library.md` / `garden.md` each gained illustrative `hint2`/
+  `hint3` values. `playground/Playground.tsx`'s `wordle` scene mirrors the
+  `start` riddle's hints for design iteration.
+
+### Verification
+`oxlint` clean · `tsc -b && vite build` succeeds · `vitest` 18/18 (no existing
+assertions touched — new hints are additive UI, exercised via Playground).
