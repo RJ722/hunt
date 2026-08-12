@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { getTag } from '../data/tags'
+import { getTag, tags } from '../data/tags'
 import { getRiddle } from '../lib/loadRiddles'
 import { evaluateGuess } from '../lib/wordle'
 import { WordleGuessGame } from '../animation-kit/WordleGuessGame'
@@ -11,6 +11,11 @@ import { CompletionScreen } from './CompletionScreen'
 interface RiddleScreenProps {
   slug: string
 }
+
+// The very first non-final stop in tags.ts — only this riddle shows the
+// "drag a letter" tip if the player hasn't spun anything after 20s. Every
+// riddle's wheels auto-spin on mount regardless of this flag.
+const firstStopSlug = tags.find((t) => !t.isFinal)?.slug
 
 /**
  * Orchestrates a single tag stop:
@@ -55,6 +60,7 @@ export function RiddleScreen({ slug }: RiddleScreenProps) {
             artifactSrc={riddle.artifactSrc}
             artifactAlt={riddle.title ? `${riddle.title} character` : 'Riddle character'}
             maxAttempts={6}
+            showOnboarding={slug === firstStopSlug}
             evaluateGuess={boundEvaluate}
             onResolved={() => setGateCleared(true)}
           />

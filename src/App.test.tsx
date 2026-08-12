@@ -34,7 +34,7 @@ describe('App smoke render', () => {
   it('renders the Wordle gate for a known tag', () => {
     setHash('#/t/start')
     render(<App />)
-    expect(screen.getByText(/Spin the petals/i)).toBeTruthy()
+    expect(screen.getByText(/Spin each letter/i)).toBeTruthy()
     // 5 letter wheels for RELAY.
     expect(screen.getAllByRole('spinbutton')).toHaveLength(5)
     // Artifact character is rendered.

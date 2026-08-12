@@ -21,9 +21,10 @@ function isAllCorrect(statuses: LetterStatus[]): boolean {
 }
 
 /**
- * "Paw Print Puzzle" — a scalloped scrapbook page. Spin the petal reels to
- * guess Kat's word; each guess is scored and softly coloured. After
- * `maxAttempts` tries the answer is revealed. Calls `onResolved(solved)`.
+ * A scalloped scrapbook page. Spin the letter reels — set in paw-print
+ * badges — to guess Kat's word; each guess is scored and softly coloured.
+ * Every reel auto-spins once on mount to invite play. After `maxAttempts`
+ * tries the answer is revealed. Calls `onResolved(solved)`.
  */
 export function WordleGuessGame({
   answerLength,
@@ -32,6 +33,7 @@ export function WordleGuessGame({
   artifactSrc,
   artifactAlt,
   maxAttempts,
+  showOnboarding = false,
   evaluateGuess,
   onResolved,
 }: WordleGuessGameProps) {
@@ -40,7 +42,7 @@ export function WordleGuessGame({
   // Space positions are fixed and never guessed — render a gap instead of a wheel.
   const answerChars = answer.toUpperCase().split('')
   const isSpace = (i: number) => answerChars[i] === ' '
-  const firstLetterPos = answerChars.findIndex((c) => c !== ' ')
+  const firstLetterIndex = answerChars.findIndex((c) => c !== ' ')
   const initialGuess = () =>
     Array.from({ length: answerLength }, (_, i) => (isSpace(i) ? ' ' : 'A'))
   const [guess, setGuess] = useState<string[]>(initialGuess)
@@ -48,6 +50,8 @@ export function WordleGuessGame({
   const [phase, setPhase] = useState<'playing' | 'solved' | 'revealed'>('playing')
   const [shakeKey, setShakeKey] = useState(0)
   const resolvedRef = useRef(false)
+  const hasSpunRef = useRef(false)
+  const [showHint, setShowHint] = useState(false)
 
   const attemptsUsed = submitted.length
   const locked = phase !== 'playing'
@@ -92,6 +96,27 @@ export function WordleGuessGame({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shakeKey])
+
+  // First-riddle-only nudge: if the player hasn't spun a single wheel within
+  // 20s of landing here, surface a small dismissible tip. Once they spin
+  // anything (or dismiss it) it never reappears for this screen.
+  useEffect(() => {
+    if (!showOnboarding) return
+    const timer = window.setTimeout(() => {
+      if (!hasSpunRef.current && phase === 'playing') setShowHint(true)
+    }, 20000)
+    return () => window.clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showOnboarding])
+
+  const handleUserSpin = () => {
+    hasSpunRef.current = true
+    setShowHint(false)
+  }
+
+  const dismissHint = () => {
+    setShowHint(false)
+  }
 
   const finish = (solved: boolean) => {
     if (resolvedRef.current) return
@@ -151,7 +176,7 @@ export function WordleGuessGame({
             color: theme.sage,
           }}
         >
-          🐾 Spin the petals to spell the word
+          🐾 Spin each letter to spell the word
         </div>
 
         {hint && (
@@ -244,20 +269,68 @@ export function WordleGuessGame({
           </div>
         )}
 
-        {/* Active input row: the petal reels. */}
+        {/* Active input row: the letter reels. */}
         {phase === 'playing' && (
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
             {guess.map((letter, i) =>
               isSpace(i) ? (
                 <div key={i} aria-hidden="true" style={{ width: 22 }} />
               ) : (
-                <LetterWheel
-                  key={i}
-                  value={letter}
-                  onChange={(l) => setLetter(i, l)}
-                  accent={theme.peach}
-                  demo={i === firstLetterPos}
-                />
+                <div key={i} style={{ position: 'relative' }}>
+                  <LetterWheel
+                    value={letter}
+                    onChange={(l) => setLetter(i, l)}
+                    accent={theme.peach}
+                    demo
+                    onUserSpin={handleUserSpin}
+                  />
+
+                  {i === firstLetterIndex && (
+                    <AnimatePresence>
+                      {showHint && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                          transition={{ type: 'spring', stiffness: 340, damping: 24 }}
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            marginTop: 12,
+                            zIndex: 3,
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 6,
+                            padding: '8px 10px',
+                            borderRadius: 14,
+                            background: theme.text,
+                            color: theme.cream,
+                            fontFamily: fonts.body,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            lineHeight: 1.35,
+                            whiteSpace: 'normal',
+                            width: 'max-content',
+                            maxWidth: 'min(220px, calc(100vw - 48px))',
+                            boxShadow: `0 6px 16px ${theme.panelEdge}aa`,
+                          }}
+                        >
+                          <span aria-hidden="true" style={hintArrowStyle} />
+                          <span style={{ flex: 1 }}>👆 Drag a letter up or down to change it</span>
+                          <button
+                            type="button"
+                            onClick={dismissHint}
+                            aria-label="Dismiss tip"
+                            style={hintCloseStyle}
+                          >
+                            ×
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  )}
+                </div>
               ),
             )}
           </div>
@@ -281,7 +354,7 @@ export function WordleGuessGame({
                   color: theme.rose,
                 }}
               >
-                Not quite — give the petals another spin 🐾
+                Not quite — give it another spin 🐾
               </motion.div>
             )}
           </div>
@@ -330,4 +403,26 @@ const submitStyle: React.CSSProperties = {
   fontWeight: 600,
   letterSpacing: 0.3,
   cursor: 'pointer',
+}
+
+const hintArrowStyle: React.CSSProperties = {
+  position: 'absolute',
+  top: -5,
+  left: 20,
+  transform: 'rotate(45deg)',
+  width: 10,
+  height: 10,
+  background: theme.text,
+  borderRadius: 2,
+}
+
+const hintCloseStyle: React.CSSProperties = {
+  border: 'none',
+  background: 'transparent',
+  color: theme.cream,
+  fontSize: 16,
+  lineHeight: 1,
+  padding: '2px 0 2px 4px',
+  cursor: 'pointer',
+  opacity: 0.8,
 }

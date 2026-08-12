@@ -25,12 +25,15 @@ interface LetterWheelProps {
   accent?: string
   /** When true, spin to a random letter once on mount to teach the gesture. */
   demo?: boolean
+  /** Called once when the *player* (not the demo animation) drags/scrolls this wheel. */
+  onUserSpin?: () => void
 }
 
 /**
- * A circular vertical A–Z petal reel. Drag/swipe, flick, or scroll (desktop)
- * to spin; past 'A' wraps to 'Z' and past 'Z' wraps to 'A'. The selected letter
- * sits large and glowing inside a paw-print badge; neighbours dim away.
+ * A circular vertical A–Z letter reel, cradled in a paw-print badge. Drag/
+ * swipe, flick, or scroll (desktop) to spin; past 'A' wraps to 'Z' and past
+ * 'Z' wraps to 'A'. The selected letter sits large and glowing; neighbours
+ * dim away.
  */
 export function LetterWheel({
   value,
@@ -38,6 +41,7 @@ export function LetterWheel({
   disabled = false,
   accent = theme.peach,
   demo = false,
+  onUserSpin,
 }: LetterWheelProps) {
   const reduced = usePrefersReducedMotion()
   const letterIndex = Math.max(0, LETTERS.indexOf(value.toUpperCase()))
@@ -56,8 +60,10 @@ export function LetterWheel({
 
   // Keep live copies of props so the native wheel listener need not re-bind.
   const onChangeRef = useRef(onChange)
+  const onUserSpinRef = useRef(onUserSpin)
   const disabledRef = useRef(disabled)
   onChangeRef.current = onChange
+  onUserSpinRef.current = onUserSpin
   disabledRef.current = disabled
 
   // Re-align if `value` is changed from outside (e.g. reset / reveal) while idle.
@@ -72,15 +78,18 @@ export function LetterWheel({
   }
 
   // ── One-time onboarding: spin to a random letter to teach the gesture ─────
+  // Travel distance and duration are both 3x a single "step" spin, so every
+  // wheel visibly whirls through several letters before settling — long
+  // enough to register as "look, these spin" without dragging the load out.
   useEffect(() => {
     if (!demo || reduced || disabled) return
-    const steps = 7 + Math.floor(Math.random() * 11) // 7..17 letters of travel
+    const steps = (7 + Math.floor(Math.random() * 11)) * 3 // 21..51 letters of travel
     const startRow = Math.round(-y.get() / ITEM_H)
     const targetRow = startRow + steps
     const li = mod(targetRow, N)
     busy.current = true
     const controls = animate(y, -targetRow * ITEM_H, {
-      duration: 1.15,
+      duration: 1.15 * 3,
       ease: [0.15, 0.85, 0.25, 1], // quick spin, gentle settle
       onComplete: () => {
         onChangeRef.current(LETTERS[li])
@@ -110,6 +119,7 @@ export function LetterWheel({
       const dir = acc > 0 ? 1 : -1
       acc = 0
       busy.current = true
+      onUserSpinRef.current?.() // real user gesture, distinct from the demo auto-spin
       if (idx === null) idx = Math.round(-y.get() / ITEM_H)
       idx += dir
       const li = mod(idx, N)
@@ -174,6 +184,7 @@ export function LetterWheel({
           onDragStart={() => {
             demoAnim.current?.stop()
             busy.current = true
+            onUserSpin?.() // real user gesture, distinct from the demo auto-spin
           }}
           onDragEnd={(_e, info) => {
             const current = y.get()

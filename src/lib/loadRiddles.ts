@@ -19,7 +19,7 @@ export interface Riddle {
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/
 
 // Eagerly resolve every artifact image to a URL at build time.
-const artifactUrls = import.meta.glob('../data/artifacts/*.{svg,png}', {
+const artifactUrls = import.meta.glob('../data/artifacts/*.{svg,png,jpg,jpeg,webp}', {
   query: '?url',
   import: 'default',
   eager: true,
