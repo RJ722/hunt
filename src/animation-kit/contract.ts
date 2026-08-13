@@ -50,7 +50,7 @@ export interface WordleGuessGameProps {
   maxAttempts: number
   /**
    * When true, a small dismissible tip ("drag a letter to change it") appears
-   * after 20s of no spinning at all. Intended for only the very first riddle
+   * after 6s of no spinning at all. Intended for only the very first riddle
    * of the hunt — every wheel already auto-spins on mount regardless of this
    * flag, but by the second stop the player has surely spun something
    * themselves already, so later riddles should pass `false` to skip the tip.

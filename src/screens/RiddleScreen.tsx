@@ -14,7 +14,7 @@ interface RiddleScreenProps {
 }
 
 // The very first non-final stop in tags.ts — only this riddle shows the
-// "drag a letter" tip if the player hasn't spun anything after 20s. Every
+// "drag a letter" tip if the player hasn't spun anything after 6s. Every
 // riddle's wheels auto-spin on mount regardless of this flag.
 const firstStopSlug = tags.find((t) => !t.isFinal)?.slug
 

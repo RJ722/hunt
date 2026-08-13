@@ -135,13 +135,13 @@ export function WordleGuessGame({
   }, [shakeKey])
 
   // First-riddle-only nudge: if the player hasn't spun a single wheel within
-  // 20s of landing here, surface a small dismissible tip. Once they spin
+  // 6s of landing here, surface a small dismissible tip. Once they spin
   // anything (or dismiss it) it never reappears for this screen.
   useEffect(() => {
     if (!showOnboarding) return
     const timer = window.setTimeout(() => {
       if (!hasSpunRef.current && phase === 'playing') setShowHint(true)
-    }, 20000)
+    }, 6000)
     return () => window.clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showOnboarding])
