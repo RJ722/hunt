@@ -85,16 +85,46 @@ export function LetterWheel({
   onUserSpinRef.current = onUserSpin
   disabledRef.current = disabled
 
-  // Re-align if `value` (or the size scale) changes from outside while idle.
+  // Re-align if `value` changes from outside while idle.
   useEffect(() => {
     if (busy.current) return
     y.set(-(MIDDLE + letterIndex) * itemH)
-  }, [letterIndex, itemH, y])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [letterIndex])
 
   const settleTo = (li: number) => {
     y.set(-(MIDDLE + li) * itemHRef.current) // invisible: same letter, middle copy
     busy.current = false
   }
+
+  // `itemH` changes whenever the row-fit `scale` is recalculated (e.g. the
+  // ResizeObserver in WordleGuessGame reporting the real row width shortly
+  // after mount, once fonts/layout settle). If that happens while a spin
+  // (the mount auto-spin, a drag, or a wheel-step) is still animating, its
+  // in-flight target is a pixel offset computed for the *old* itemH — left
+  // alone, `y` and the new itemH would disagree about which row is centered,
+  // so no strip letter reads as "selected" and every letter renders in its
+  // dim/shrunk neighbour state (looks like the letters vanished). Rescale
+  // immediately: idle wheels just reposition to the same letter at the new
+  // size; busy ones stop the stale animation and settle at the nearest row
+  // so they never end up stranded between two rows.
+  const prevItemHRef = useRef(itemH)
+  useEffect(() => {
+    const prevItemH = prevItemHRef.current
+    prevItemHRef.current = itemH
+    if (prevItemH === itemH || prevItemH <= 0) return
+    const currentRow = -y.get() / prevItemH
+    if (busy.current) {
+      demoAnim.current?.stop()
+      demoAnim.current = null
+      const li = mod(Math.round(currentRow), N)
+      onChangeRef.current(LETTERS[li])
+      settleTo(li)
+    } else {
+      y.set(-currentRow * itemH)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemH])
 
   // ── One-time onboarding: spin to a random letter to teach the gesture ─────
   // Travel distance and duration are both 3x a single "step" spin, so every
