@@ -5,7 +5,8 @@ answer: TEA TIME
 hint: You wake up every day, and before anything else, it finds its way into your hands — always the very first thing you do. A certain Queen was famous for never missing hers.
 hint2: "All of us sit together when it's __A  T__E"
 hint3: Rhymes with "sea" and "chime"
-artifact: curious-kat.svg
+artifact: saree-kat.png
+artifact2: saree-kat2.png
 ---
 
 Your treasure isn't somewhere grand.
