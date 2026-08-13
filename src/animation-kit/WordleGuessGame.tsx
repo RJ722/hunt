@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useAnimationControls } from 'motion/react'
 import type { LetterStatus, WordleGuessGameProps } from './contract'
-import { LetterWheel } from './LetterWheel'
+import { LetterWheel, MIN_SCALE, WHEEL_W_BASE } from './LetterWheel'
 import { ScallopedCard } from './ScallopedCard'
 import { fonts, theme, usePrefersReducedMotion } from './theme'
+
+// Base (scale === 1) pixel metrics for the wheels row — must match the values
+// baked into LetterWheel's own default rendering so the fit calculation below
+// is accurate.
+const GAP_BASE = 8
+const SPACE_W_BASE = 22
 
 interface SubmittedRow {
   letters: string[]
@@ -53,8 +59,29 @@ export function WordleGuessGame({
   const [shakeKey, setShakeKey] = useState(0)
   const resolvedRef = useRef(false)
   const hasSpunRef = useRef(false)
-  const historyRef = useRef<HTMLDivElement>(null)
   const [showHint, setShowHint] = useState(false)
+
+  // Measure the actual available width for the wheels row and shrink every
+  // wheel uniformly (via `scale`) so longer answers never overflow the
+  // screen — works for any answer length and any device width, not just a
+  // hardcoded breakpoint.
+  const rowRef = useRef<HTMLDivElement>(null)
+  const [rowWidth, setRowWidth] = useState(0)
+  useEffect(() => {
+    const el = rowRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width
+      if (width) setRowWidth(width)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  const unscaledRowWidth =
+    answerChars.reduce((sum, c) => sum + (c === ' ' ? SPACE_W_BASE : WHEEL_W_BASE), 0) +
+    GAP_BASE * (answerChars.length - 1)
+  const wheelScale =
+    rowWidth > 0 ? Math.min(1, Math.max(MIN_SCALE, rowWidth / unscaledRowWidth)) : 1
 
   const attemptsUsed = submitted.length
   const locked = phase !== 'playing'
@@ -150,13 +177,6 @@ export function WordleGuessGame({
     const row: SubmittedRow = { letters: [...guess], statuses }
     const nextSubmitted = [...submitted, row]
     setSubmitted(nextSubmitted)
-    // Keep the newest guess in view instead of letting the card (and the
-    // whole page) grow taller with every retry — the history scrolls in its
-    // own small strip so the layout height stays constant past 2+ retries.
-    requestAnimationFrame(() => {
-      const el = historyRef.current
-      if (el) el.scrollTop = el.scrollHeight
-    })
 
     if (isAllCorrect(statuses)) {
       finish(true)
@@ -279,75 +299,81 @@ export function WordleGuessGame({
           </div>
         )}
 
-        {/* Submitted guesses as soft rounded tiles. Capped + scrollable so
-            piling up retries doesn't keep growing the card (and force the
-            whole iPhone viewport to scroll) — only the last couple of rows
-            show at once, newest kept in view. */}
-        {submitted.length > 0 && (
-          <div
-            ref={historyRef}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 7,
-              maxHeight: 100,
-              overflowY: 'auto',
-              overscrollBehavior: 'contain',
-              width: '100%',
-              paddingBottom: 2,
-            }}
-          >
-            {submitted.map((row, r) => {
-              const isLastWrong = r === submitted.length - 1 && phase === 'playing'
-              return (
-                <motion.div
-                  key={r}
-                  animate={
-                    isLastWrong && !reduced
-                      ? { x: [0, -8, 8, -5, 5, 0] }
-                      : {}
-                  }
-                  transition={{ duration: 0.42 }}
-                  {...(isLastWrong ? { 'data-shake': shakeKey } : {})}
-                  style={{ display: 'flex', gap: 6, justifyContent: 'center' }}
-                >
-                  {row.letters.map((letter, c) =>
-                    isSpace(c) ? (
-                      <div key={c} style={{ width: 16 }} aria-hidden="true" />
-                    ) : (
-                      <div
-                        key={c}
-                        style={{
-                          width: 40,
-                          height: 40,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontFamily: fonts.display,
-                          fontSize: 20,
-                          fontWeight: 700,
-                          color: theme.cream,
-                          background: tileBg(row.statuses[c]),
-                          borderRadius: 12,
-                          boxShadow: `0 2px 5px ${theme.panelEdge}88`,
-                        }}
-                      >
-                        {letter}
-                      </div>
-                    ),
-                  )}
-                </motion.div>
-              )
-            })}
-          </div>
-        )}
+        {/* Submitted guesses as soft rounded tiles. Only the most recent
+            attempt is shown — older ones slide up and fade out as a new one
+            replaces them, so the card doesn't keep growing (or need to
+            scroll) as retries pile up. The wrapper reserves this row's
+            height from the very first render (even with zero guesses) so
+            that the *first* wrong guess doesn't suddenly grow the card —
+            on short viewports (e.g. iPhone 14) that growth was enough to
+            push the page into a scrollbar-visible state. */}
+        <div style={{ minHeight: Math.round(40 * wheelScale), display: 'flex', alignItems: 'center' }}>
+          <AnimatePresence mode="popLayout" initial={false}>
+            {submitted.length > 0 &&
+              (() => {
+                const r = submitted.length - 1
+                const row = submitted[r]
+                const shouldShake = phase === 'playing'
+                return (
+                  <motion.div
+                    key={r}
+                    initial={reduced ? false : { opacity: 0, y: 14 }}
+                    animate={
+                      shouldShake && !reduced
+                        ? { opacity: 1, y: 0, x: [0, -8, 8, -5, 5, 0] }
+                        : { opacity: 1, y: 0 }
+                    }
+                    exit={reduced ? { opacity: 0 } : { opacity: 0, y: -14 }}
+                    transition={{ duration: 0.42 }}
+                    {...(shouldShake ? { 'data-shake': shakeKey } : {})}
+                    style={{ display: 'flex', gap: Math.round(6 * wheelScale), justifyContent: 'center' }}
+                  >
+                    {row.letters.map((letter, c) =>
+                      isSpace(c) ? (
+                        <div key={c} style={{ width: Math.round(16 * wheelScale) }} aria-hidden="true" />
+                      ) : (
+                        <div
+                          key={c}
+                          style={{
+                            width: Math.round(40 * wheelScale),
+                            height: Math.round(40 * wheelScale),
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontFamily: fonts.display,
+                            fontSize: Math.round(20 * wheelScale),
+                            fontWeight: 700,
+                            color: theme.cream,
+                            background: tileBg(row.statuses[c]),
+                            borderRadius: 12,
+                            boxShadow: `0 2px 5px ${theme.panelEdge}88`,
+                          }}
+                        >
+                          {letter}
+                        </div>
+                      ),
+                    )}
+                  </motion.div>
+                )
+              })()}
+          </AnimatePresence>
+        </div>
 
         {/* Active input row: the letter reels. */}
         {phase === 'playing' && (
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
+          <div
+            ref={rowRef}
+            style={{
+              display: 'flex',
+              gap: Math.round(GAP_BASE * wheelScale),
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '100%',
+            }}
+          >
             {guess.map((letter, i) =>
               isSpace(i) ? (
-                <div key={i} aria-hidden="true" style={{ width: 22 }} />
+                <div key={i} aria-hidden="true" style={{ width: Math.round(SPACE_W_BASE * wheelScale) }} />
               ) : (
                 <div key={i} style={{ position: 'relative' }}>
                   <LetterWheel
@@ -356,6 +382,7 @@ export function WordleGuessGame({
                     accent={theme.peach}
                     demo
                     onUserSpin={handleUserSpin}
+                    scale={wheelScale}
                   />
 
                   {i === firstLetterIndex && (
@@ -409,27 +436,33 @@ export function WordleGuessGame({
           </div>
         )}
 
-        {/* Footer: a quiet "check" affordance + gentle nudge after a wrong try. */}
+        {/* Footer: a quiet "check" affordance + gentle nudge after a wrong try.
+            The message wrapper reserves its line height from the start (see
+            the submitted-row wrapper above for why) so the first wrong
+            guess doesn't grow the card and tip a short viewport into
+            scrolling. */}
         {phase === 'playing' && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <button type="button" onClick={submit} style={submitStyle}>
               Check the word
             </button>
-            {submitted.length > 0 && (
-              <motion.div
-                key={submitted.length}
-                initial={reduced ? false : { opacity: 0, y: -3 }}
-                animate={{ opacity: 1, y: 0 }}
-                style={{
-                  fontFamily: fonts.body,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: theme.rose,
-                }}
-              >
-                Not quite — give it another spin 🐾
-              </motion.div>
-            )}
+            <div style={{ minHeight: 18, display: 'flex', alignItems: 'center' }}>
+              {submitted.length > 0 && (
+                <motion.div
+                  key={submitted.length}
+                  initial={reduced ? false : { opacity: 0, y: -3 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    fontFamily: fonts.body,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: theme.rose,
+                  }}
+                >
+                  Not quite — give it another spin 🐾
+                </motion.div>
+              )}
+            </div>
           </div>
         )}
 

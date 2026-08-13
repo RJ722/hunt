@@ -60,6 +60,7 @@ export function RiddleScreen({ slug }: RiddleScreenProps) {
             key="gate"
             exit={{ opacity: 0, filter: 'blur(6px)' }}
             transition={{ duration: 0.4 }}
+            style={{ width: '100%', minWidth: 0 }}
           >
             <WordleGuessGame
               answerLength={riddle.answer.length}
@@ -89,6 +90,7 @@ export function RiddleScreen({ slug }: RiddleScreenProps) {
             initial={instantReveal.current ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
+            style={{ width: '100%', minWidth: 0 }}
           >
             <TagRiddleAnimation
               riddleTitle={riddle.title}

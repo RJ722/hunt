@@ -17,13 +17,13 @@ describe('loadRiddles', () => {
     expect(tags.filter((t) => t.isFinal)).toHaveLength(1)
   })
 
-  it('supports spaces in an answer (garden -> "IN BLOOM")', () => {
-    const riddle = getRiddle('garden')
-    expect(riddle?.answer).toBe('IN BLOOM')
+  it('supports spaces in an answer (anteroom -> "TEA TIME")', () => {
+    const riddle = getRiddle('anteroom')
+    expect(riddle?.answer).toBe('TEA TIME')
   })
 
   it('resolves artifact frontmatter to a URL', () => {
-    const riddle = getRiddle('start')
+    const riddle = getRiddle('threshold')
     expect(typeof riddle?.artifactSrc).toBe('string')
     // May be a hashed URL in build or an inlined data URI under Vitest.
     expect(riddle!.artifactSrc!.length).toBeGreaterThan(0)

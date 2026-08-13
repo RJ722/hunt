@@ -37,6 +37,20 @@ export function ScallopedCard({
         position: 'relative',
         width: '100%',
         maxWidth,
+        // Self-center regardless of the parent's width. The RiddleScreen
+        // wrapper around this card is `width: 100%` (needed so the wheel row
+        // can measure available space and shrink to fit), which means this
+        // card no longer gets centered "for free" by App's flex row once its
+        // own width is capped below the parent's — so it must center itself.
+        margin: '0 auto',
+        // This is a flex item inside App's centering flex row. Flex items
+        // default to `min-width: auto`, which refuses to shrink below the
+        // content's min-content size — so a long, non-wrapping row (e.g. the
+        // Wordle wheels) would silently force this card wider than the
+        // viewport no matter what `width`/`maxWidth` say. Overriding it lets
+        // the card (and everything measuring its width, like the wheel
+        // auto-sizing) actually shrink to fit any screen.
+        minWidth: 0,
         filter: 'drop-shadow(0 10px 22px rgba(120, 88, 60, 0.18))',
         ...style,
       }}

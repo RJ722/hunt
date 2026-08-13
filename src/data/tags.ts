@@ -16,9 +16,12 @@ export interface TagEntry {
  * serial). Keep them short and URL-safe.
  */
 export const tags: TagEntry[] = [
-  { slug: 'start' },
-  { slug: 'library' },
-  { slug: 'garden' },
+  { slug: 'anteroom' },
+  { slug: 'threshold' },
+  { slug: 'corridor' },
+  { slug: 'atrium' },
+  { slug: 'landing' },
+  { slug: 'chamber' },
   {
     slug: 'vault',
     isFinal: true,

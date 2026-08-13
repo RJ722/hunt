@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { animate, motion, useMotionValue, useMotionValueEvent } from 'motion/react'
 import { LETTERS, theme, usePrefersReducedMotion } from './theme'
 
-const ITEM_H = 50
+// Base (scale === 1) pixel metrics — see `scale` prop below for how longer
+// answers shrink every wheel uniformly to keep the whole row on-screen.
+const ITEM_H_BASE = 50
+export const WHEEL_W_BASE = 58
 const COPIES = 3
 const N = LETTERS.length // 26
 const MIDDLE = N // index where the middle alphabet copy starts
@@ -12,6 +15,8 @@ const mod = (n: number, m: number) => ((n % m) + m) % m
 const MOMENTUM = 0.28
 // Wheel/trackpad delta needed to advance one letter on desktop.
 const WHEEL_STEP = 46
+// Never shrink so far that letters stop being legible/tappable.
+export const MIN_SCALE = 0.5
 
 // Three stacked copies of the alphabet so the reel can wrap seamlessly. After
 // every interaction we snap back into the middle copy (invisible, same letter),
@@ -27,6 +32,12 @@ interface LetterWheelProps {
   demo?: boolean
   /** Called once when the *player* (not the demo animation) drags/scrolls this wheel. */
   onUserSpin?: () => void
+  /**
+   * Uniform size multiplier (0.5–1), so longer answers (more wheels in a row)
+   * shrink to fit the available width instead of overflowing it. Defaults to
+   * full size.
+   */
+  scale?: number
 }
 
 /**
@@ -42,11 +53,19 @@ export function LetterWheel({
   accent = theme.peach,
   demo = false,
   onUserSpin,
+  scale = 1,
 }: LetterWheelProps) {
   const reduced = usePrefersReducedMotion()
+  const clampedScale = Math.min(1, Math.max(MIN_SCALE, scale))
+  const itemH = Math.round(ITEM_H_BASE * clampedScale)
+  const wheelW = Math.round(WHEEL_W_BASE * clampedScale)
+  // Read from a ref inside effects/closures that don't want to re-run every
+  // time `scale` changes (mount-only demo spin, native wheel listener).
+  const itemHRef = useRef(itemH)
+  itemHRef.current = itemH
   const letterIndex = Math.max(0, LETTERS.indexOf(value.toUpperCase()))
   // The selection lives in the middle copy so there is room to wrap either way.
-  const y = useMotionValue(-(MIDDLE + letterIndex) * ITEM_H)
+  const y = useMotionValue(-(MIDDLE + letterIndex) * itemH)
   const busy = useRef(false)
   const viewportRef = useRef<HTMLDivElement>(null)
   const demoAnim = useRef<{ stop: () => void } | null>(null)
@@ -54,7 +73,7 @@ export function LetterWheel({
   // Which strip row is currently centered — drives the "pop" as the reel moves.
   const [centerRow, setCenterRow] = useState(MIDDLE + letterIndex)
   useMotionValueEvent(y, 'change', (latest) => {
-    const row = Math.round(-latest / ITEM_H)
+    const row = Math.round(-latest / itemHRef.current)
     setCenterRow((prev) => (prev === row ? prev : row))
   })
 
@@ -66,14 +85,14 @@ export function LetterWheel({
   onUserSpinRef.current = onUserSpin
   disabledRef.current = disabled
 
-  // Re-align if `value` is changed from outside (e.g. reset / reveal) while idle.
+  // Re-align if `value` (or the size scale) changes from outside while idle.
   useEffect(() => {
     if (busy.current) return
-    y.set(-(MIDDLE + letterIndex) * ITEM_H)
-  }, [letterIndex, y])
+    y.set(-(MIDDLE + letterIndex) * itemH)
+  }, [letterIndex, itemH, y])
 
   const settleTo = (li: number) => {
-    y.set(-(MIDDLE + li) * ITEM_H) // invisible: same letter, middle copy
+    y.set(-(MIDDLE + li) * itemHRef.current) // invisible: same letter, middle copy
     busy.current = false
   }
 
@@ -84,11 +103,11 @@ export function LetterWheel({
   useEffect(() => {
     if (!demo || reduced || disabled) return
     const steps = (7 + Math.floor(Math.random() * 11)) * 3 // 21..51 letters of travel
-    const startRow = Math.round(-y.get() / ITEM_H)
+    const startRow = Math.round(-y.get() / itemHRef.current)
     const targetRow = startRow + steps
     const li = mod(targetRow, N)
     busy.current = true
-    const controls = animate(y, -targetRow * ITEM_H, {
+    const controls = animate(y, -targetRow * itemHRef.current, {
       duration: 1.15 * 3,
       ease: [0.15, 0.85, 0.25, 1], // quick spin, gentle settle
       onComplete: () => {
@@ -120,11 +139,11 @@ export function LetterWheel({
       acc = 0
       busy.current = true
       onUserSpinRef.current?.() // real user gesture, distinct from the demo auto-spin
-      if (idx === null) idx = Math.round(-y.get() / ITEM_H)
+      if (idx === null) idx = Math.round(-y.get() / itemHRef.current)
       idx += dir
       const li = mod(idx, N)
       onChangeRef.current(LETTERS[li])
-      animate(y, -idx * ITEM_H, { type: 'spring', stiffness: 520, damping: 44 })
+      animate(y, -idx * itemHRef.current, { type: 'spring', stiffness: 520, damping: 44 })
 
       window.clearTimeout(timer)
       timer = window.setTimeout(() => {
@@ -158,8 +177,8 @@ export function LetterWheel({
         aria-label="letter"
         style={{
           position: 'relative',
-          width: 58,
-          height: ITEM_H * 3,
+          width: wheelW,
+          height: itemH * 3,
           overflow: 'hidden',
           borderRadius: '40% 40% 40% 40% / 30% 30% 30% 30%',
           background: theme.panelSoft,
@@ -169,16 +188,16 @@ export function LetterWheel({
         }}
       >
         {/* paw-print badge behind the centered letter */}
-        <PawBadge accent={accent} />
+        <PawBadge accent={accent} size={Math.round(46 * clampedScale)} />
 
-        <div style={fadeStyle('top')} />
-        <div style={fadeStyle('bottom')} />
+        <div style={fadeStyle('top', itemH)} />
+        <div style={fadeStyle('bottom', itemH)} />
 
         <motion.div
-          // `top: ITEM_H` centers the selected item in the middle row.
-          style={{ y, position: 'absolute', left: 0, right: 0, top: ITEM_H, touchAction: 'none' }}
+          // `top: itemH` centers the selected item in the middle row.
+          style={{ y, position: 'absolute', left: 0, right: 0, top: itemH, touchAction: 'none' }}
           drag={disabled ? false : 'y'}
-          dragConstraints={{ top: -(STRIP.length - 1) * ITEM_H, bottom: 0 }}
+          dragConstraints={{ top: -(STRIP.length - 1) * itemH, bottom: 0 }}
           dragElastic={0.06}
           dragMomentum={false}
           onDragStart={() => {
@@ -192,14 +211,14 @@ export function LetterWheel({
             // Project where the flick would coast to, so a fast swipe carries
             // through several letters instead of stopping under the finger.
             const projected = current + velocity * MOMENTUM
-            const rawNearest = Math.round(-projected / ITEM_H)
+            const rawNearest = Math.round(-projected / itemH)
             const nearest = Math.min(Math.max(rawNearest, 0), STRIP.length - 1)
             const li = mod(nearest, N)
             onChange(LETTERS[li])
             if (reduced) {
               settleTo(li)
             } else {
-              animate(y, -nearest * ITEM_H, {
+              animate(y, -nearest * itemH, {
                 type: 'spring',
                 stiffness: 170,
                 damping: 30,
@@ -216,12 +235,12 @@ export function LetterWheel({
               <div
                 key={i}
                 style={{
-                  height: ITEM_H,
+                  height: itemH,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontFamily: '"Baloo 2", ui-monospace, monospace',
-                  fontSize: selected ? 30 : 19,
+                  fontSize: Math.round((selected ? 30 : 19) * clampedScale),
                   fontWeight: selected ? 800 : 600,
                   color: selected ? theme.text : theme.textDim,
                   opacity: selected ? 1 : dist === 1 ? 0.5 : 0.28,
@@ -241,11 +260,11 @@ export function LetterWheel({
 }
 
 /** A soft paw-print badge that haloes the centered letter. */
-function PawBadge({ accent }: { accent: string }) {
+function PawBadge({ accent, size = 46 }: { accent: string; size?: number }) {
   return (
     <svg
-      width="46"
-      height="46"
+      width={size}
+      height={size}
       viewBox="0 0 46 46"
       aria-hidden="true"
       style={{
@@ -268,12 +287,12 @@ function PawBadge({ accent }: { accent: string }) {
   )
 }
 
-function fadeStyle(edge: 'top' | 'bottom'): React.CSSProperties {
+function fadeStyle(edge: 'top' | 'bottom', itemH: number): React.CSSProperties {
   return {
     position: 'absolute',
     left: 0,
     right: 0,
-    height: ITEM_H,
+    height: itemH,
     [edge]: 0,
     zIndex: 2,
     pointerEvents: 'none',

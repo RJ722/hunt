@@ -21,7 +21,7 @@ npm run lint
 ```
 
 Try it locally by visiting a tag route, e.g.
-`http://localhost:5173/#/t/start`.
+`http://localhost:5173/#/t/anteroom`.
 
 ---
 
@@ -50,9 +50,12 @@ string **you** choose (not the tag's hardware serial):
 
 ```ts
 export const tags: TagEntry[] = [
-  { slug: 'start' },
-  { slug: 'library' },
-  { slug: 'garden' },
+  { slug: 'anteroom' },
+  { slug: 'threshold' },
+  { slug: 'corridor' },
+  { slug: 'atrium' },
+  { slug: 'landing' },
+  { slug: 'chamber' },
   { slug: 'vault', isFinal: true, completionMessage: 'ACCESS GRANTED, Agent.' },
 ]
 ```
@@ -67,7 +70,7 @@ One markdown file per non-final tag. Filenames can be anything; the link is the
 
 ```md
 ---
-tagId: start                 # must match a slug in tags.ts
+tagId: anteroom               # must match a slug in tags.ts
 title: Transmission 01       # optional
 answer: RELAY                # the Wordle word — LETTERS A–Z ONLY
 hint: A station that passes a signal along   # optional
@@ -92,7 +95,7 @@ Do this once per tag with a phone NFC-writing app (e.g. **NFC Tools**):
 1. Decide your final production URL first (see the ⚠️ warning below).
 2. In the NFC app, choose "Write" → "Add a record" → "URL".
 3. Enter the tag's URL: `https://hunt.onlyfork.at/#/t/<slug>`, using the
-   `slug` from `tags.ts` (e.g. `.../#/t/library`).
+   `slug` from `tags.ts` (e.g. `.../#/t/threshold`).
 4. Hold the tag to the phone to write it. Repeat for each tag.
 
 ### Tag URL reference
@@ -103,17 +106,20 @@ table in sync if you add, rename, or remove tags.
 
 | Order | Slug | Riddle / role | Answer | Production URL to burn |
 | ----- | ---- | ------------- | ------ | ---------------------- |
-| 1 | `start` | Treat One | `RELAY` | `https://hunt.onlyfork.at/#/t/start` |
-| 2 | `library` | Treat Two | `PAGE` | `https://hunt.onlyfork.at/#/t/library` |
-| 3 | `garden` | Treat Three | `IN BLOOM` | `https://hunt.onlyfork.at/#/t/garden` |
+| 1 | `anteroom` | Treat One | `TEA TIME` | `https://hunt.onlyfork.at/#/t/anteroom` |
+| 2 | `threshold` | Treat Two | `KAT` | `https://hunt.onlyfork.at/#/t/threshold` |
+| 3 | `corridor` | Treat Three | `FLIGHT` | `https://hunt.onlyfork.at/#/t/corridor` |
+| 4 | `atrium` | Treat Four | `PLANTS` | `https://hunt.onlyfork.at/#/t/atrium` |
+| 5 | `landing` | Treat Five | `ICU` | `https://hunt.onlyfork.at/#/t/landing` |
+| 6 | `chamber` | Treat Six | `ELLAMMA` | `https://hunt.onlyfork.at/#/t/chamber` |
 | 🎉 | `vault` | Final — celebration (no puzzle) | — | `https://hunt.onlyfork.at/#/t/vault` |
 
 For local testing before you burn tags, swap the base for the dev server, e.g.
-`http://localhost:5173/#/t/start` (the dev server may pick another port
+`http://localhost:5173/#/t/anteroom` (the dev server may pick another port
 such as `5174` if `5173` is busy — check the terminal output).
 
 > **Tip:** The hunt order is defined by the *clues*, not the tags themselves —
-> each riddle's text points the player to the next physical tag. `start` is the
+> each riddle's text points the player to the next physical tag. `anteroom` is the
 > intended entry point; `vault` is the final celebration. Place the physical
 > tags accordingly.
 

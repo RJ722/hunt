@@ -32,19 +32,19 @@ describe('App smoke render', () => {
   })
 
   it('renders the Wordle gate for a known tag', () => {
-    setHash('#/t/start')
+    setHash('#/t/threshold')
     render(<App />)
     expect(screen.getByText(/Spin each letter/i)).toBeTruthy()
-    // 5 letter wheels for RELAY.
-    expect(screen.getAllByRole('spinbutton')).toHaveLength(5)
+    // 3 letter wheels for KAT.
+    expect(screen.getAllByRole('spinbutton')).toHaveLength(3)
     // Artifact character is rendered.
     expect(screen.getByRole('img')).toBeTruthy()
   })
 
-  it('renders fixed gaps for spaces (garden -> "IN BLOOM" = 7 wheels)', () => {
-    setHash('#/t/garden')
+  it('renders fixed gaps for spaces (anteroom -> "TEA TIME" = 7 wheels)', () => {
+    setHash('#/t/anteroom')
     render(<App />)
-    // "IN BLOOM" has 7 letters + 1 space; the space is not a wheel.
+    // "TEA TIME" has 7 letters + 1 space; the space is not a wheel.
     expect(screen.getAllByRole('spinbutton')).toHaveLength(7)
   })
 
