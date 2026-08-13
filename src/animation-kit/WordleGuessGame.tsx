@@ -132,7 +132,15 @@ export function WordleGuessGame({
     if (resolvedRef.current) return
     resolvedRef.current = true
     setPhase(solved ? 'solved' : 'revealed')
-    window.setTimeout(() => onResolved(solved), reduced ? 300 : 1400)
+    if (solved) {
+      // A correct solve hands straight off to the SolveTransition payoff,
+      // which covers the screen immediately — no reason to wait here at all.
+      onResolved(true)
+      return
+    }
+    // The consolation "revealed after running out of tries" case has no
+    // follow-up animation, so it keeps its longer, calmer pause.
+    window.setTimeout(() => onResolved(false), reduced ? 0 : 1400)
   }
 
   const submit = () => {

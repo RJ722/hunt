@@ -23,6 +23,12 @@ export interface Riddle {
   hint3?: string
   /** Optional resolved URL of an artifact image shown with the puzzle. */
   artifactSrc?: string
+  /**
+   * Optional resolved URL of a second, slightly different sprite frame —
+   * swapped in during the SolveTransition spin to suggest simple two-frame
+   * motion (e.g. a tiny wing flap or paw wiggle), like a little flipbook.
+   */
+  artifactSrcAlt?: string
   /** The clue body (revealed after the puzzle is solved), as markdown/plain text. */
   clue: string
 }
@@ -88,6 +94,14 @@ function parseMarkdown(raw: string, path: string): Riddle {
     artifactSrc = resolveArtifact(data.artifact.trim(), path)
   }
 
+  let artifactSrcAlt: string | undefined
+  if (data.artifact2 !== undefined) {
+    if (typeof data.artifact2 !== 'string' || data.artifact2.trim() === '') {
+      throw new Error(`Riddle "${path}" has an invalid "artifact2" (must be a filename).`)
+    }
+    artifactSrcAlt = resolveArtifact(data.artifact2.trim(), path)
+  }
+
   return {
     tagId: tagId.trim(),
     title: typeof data.title === 'string' ? data.title : undefined,
@@ -96,6 +110,7 @@ function parseMarkdown(raw: string, path: string): Riddle {
     hint2: typeof data.hint2 === 'string' ? data.hint2 : undefined,
     hint3: typeof data.hint3 === 'string' ? data.hint3 : undefined,
     artifactSrc,
+    artifactSrcAlt,
     clue,
   }
 }

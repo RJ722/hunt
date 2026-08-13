@@ -76,10 +76,52 @@ export interface TagRiddleAnimationProps {
   riddleTitle?: string
   /** The clue guiding the player to the next physical tag. */
   riddleText: string
+  /**
+   * Optional hero image shown above the clue text — this is the very same
+   * sprite2 frame `SolveTransition` lands on, so the clue page shows the
+   * "landed" sprite in place, not a separate flower/ribbon graphic.
+   */
+  heroSrc?: string
+  /** Alt text for the hero image. */
+  heroAlt?: string
+  /**
+   * When true, renders already fully "bloomed" with no entrance animation —
+   * used when this exact content was just shown moments earlier (e.g. on the
+   * back face of `SolveTransition`) so it doesn't visibly replay from
+   * scratch. Independent of the user's reduced-motion preference.
+   */
+  instant?: boolean
 }
 
 /** The celebratory animation shown when the final tag is tapped. */
 export interface CompletionAnimationProps {
   /** Customizable congratulatory message (from tags.ts completionMessage). */
   message: string
+}
+
+/**
+ * The "you got it!" payoff played once between a solved Wordle gate and the
+ * clue reveal. Owns its own timing end-to-end and calls `onComplete` when the
+ * sequence (or its reduced-motion equivalent) is finished, at which point the
+ * caller should swap in the plain `TagRiddleAnimation` for the persistent view.
+ */
+export interface SolveTransitionProps {
+  /** Same artifact shown in the Wordle gate — the sprite that spins & grows. */
+  artifactSrc?: string
+  /**
+   * Optional second sprite frame. Swapped in for the final half-turn as the
+   * spin decelerates — the player reads it as the spin itself having
+   * morphed Kat into this pose — then this frame is what shrinks away to
+   * reveal the clue. Falls back to `artifactSrc` throughout when omitted.
+   */
+  artifactSrcAlt?: string
+  /** Alt text for the artifact image. */
+  artifactAlt?: string
+  /**
+   * Called once the sprite has shrunk away and the overlay has fully faded
+   * (or immediately, if reduced motion / no artifact) — the caller's own
+   * clue view should already be mounted underneath by this point so nothing
+   * new needs to pop in.
+   */
+  onComplete: () => void
 }

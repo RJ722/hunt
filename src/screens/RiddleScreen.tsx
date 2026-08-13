@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { getTag, tags } from '../data/tags'
 import { getRiddle } from '../lib/loadRiddles'
 import { evaluateGuess } from '../lib/wordle'
 import { WordleGuessGame } from '../animation-kit/WordleGuessGame'
 import { TagRiddleAnimation } from '../animation-kit/TagRiddleAnimation'
+import { SolveTransition } from '../animation-kit/SolveTransition'
 import { NotFoundScreen } from './NotFoundScreen'
 import { CompletionScreen } from './CompletionScreen'
 
@@ -26,7 +27,13 @@ const firstStopSlug = tags.find((t) => !t.isFinal)?.slug
 export function RiddleScreen({ slug }: RiddleScreenProps) {
   const tag = getTag(slug)
   const riddle = tag ? getRiddle(slug) : undefined
-  const [gateCleared, setGateCleared] = useState(false)
+  const [phase, setPhase] = useState<'gate' | 'clue'>('gate')
+  // Whether the current 'clue' phase was reached via a genuine solve (the
+  // SolveTransition overlay covers the screen while it plays, so the clue
+  // beneath should mount fully settled/instant) vs. the "ran out of tries"
+  // reveal, which has no overlay and should play its normal entrance.
+  const instantReveal = useRef(false)
+  const [solveOverlay, setSolveOverlay] = useState(false)
 
   const boundEvaluate = useMemo(
     () => (guess: string) => evaluateGuess(guess, riddle?.answer ?? ''),
@@ -46,37 +53,62 @@ export function RiddleScreen({ slug }: RiddleScreenProps) {
   if (!riddle) return <NotFoundScreen reason="unknown" />
 
   return (
-    <AnimatePresence mode="wait">
-      {!gateCleared ? (
-        <motion.div
-          key="gate"
-          exit={{ opacity: 0, filter: 'blur(6px)' }}
-          transition={{ duration: 0.4 }}
-        >
-          <WordleGuessGame
-            answerLength={riddle.answer.length}
-            answer={riddle.answer}
-            hint={riddle.hint}
-            hint2={riddle.hint2}
-            hint3={riddle.hint3}
-            artifactSrc={riddle.artifactSrc}
-            artifactAlt={riddle.title ? `${riddle.title} character` : 'Riddle character'}
-            maxAttempts={6}
-            showOnboarding={slug === firstStopSlug}
-            evaluateGuess={boundEvaluate}
-            onResolved={() => setGateCleared(true)}
-          />
-        </motion.div>
-      ) : (
-        <motion.div
-          key="clue"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <TagRiddleAnimation riddleTitle={riddle.title} riddleText={riddle.clue} />
-        </motion.div>
+    <>
+      <AnimatePresence>
+        {phase === 'gate' ? (
+          <motion.div
+            key="gate"
+            exit={{ opacity: 0, filter: 'blur(6px)' }}
+            transition={{ duration: 0.4 }}
+          >
+            <WordleGuessGame
+              answerLength={riddle.answer.length}
+              answer={riddle.answer}
+              hint={riddle.hint}
+              hint2={riddle.hint2}
+              hint3={riddle.hint3}
+              artifactSrc={riddle.artifactSrc}
+              artifactAlt={riddle.title ? `${riddle.title} character` : 'Riddle character'}
+              maxAttempts={6}
+              showOnboarding={slug === firstStopSlug}
+              evaluateGuess={boundEvaluate}
+              onResolved={(solved) => {
+                // On a genuine solve, throw up the full-screen payoff
+                // *immediately* and mount the clue instantly underneath it
+                // (hidden behind the opaque overlay) rather than gating the
+                // clue's own mount on the overlay finishing.
+                instantReveal.current = solved
+                if (solved) setSolveOverlay(true)
+                setPhase('clue')
+              }}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="clue"
+            initial={instantReveal.current ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <TagRiddleAnimation
+              riddleTitle={riddle.title}
+              riddleText={riddle.clue}
+              heroSrc={riddle.artifactSrcAlt ?? riddle.artifactSrc}
+              heroAlt={riddle.title ? `${riddle.title} character` : 'Riddle character'}
+              instant={instantReveal.current}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {solveOverlay && (
+        <SolveTransition
+          artifactSrc={riddle.artifactSrc}
+          artifactSrcAlt={riddle.artifactSrcAlt}
+          artifactAlt={riddle.title ? `${riddle.title} character` : 'Riddle character'}
+          onComplete={() => setSolveOverlay(false)}
+        />
       )}
-    </AnimatePresence>
+    </>
   )
 }
